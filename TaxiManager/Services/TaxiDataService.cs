@@ -291,6 +291,40 @@ namespace TaxiManager.Services
         }
 
         /// <summary>
+        /// 매출과 함께 일별 마감 처리
+        /// </summary>
+        public void CreateDailySettlementWithRevenue(DateTime date, decimal revenue, string notes = "")
+        {
+            // 해당 날짜의 모든 근무시간 조회
+            var dailyShifts = GetAllWorkShifts()
+                .Where(x => x.Date.Date == date.Date)
+                .ToList();
+
+            if (!dailyShifts.Any())
+            {
+                throw new InvalidOperationException("해당 날짜에 근무 기록이 없습니다.");
+            }
+
+            var totalWorkingHours = dailyShifts.Sum(x => x.WorkingHours);
+
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                INSERT OR REPLACE INTO DailySettlements (Date, SettlementDateTime, TotalRevenue, TotalWorkingHours, Notes)
+                VALUES (@Date, @SettlementDateTime, @TotalRevenue, @TotalWorkingHours, @Notes)";
+
+            command.Parameters.AddWithValue("@Date", date.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@SettlementDateTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            command.Parameters.AddWithValue("@TotalRevenue", revenue);
+            command.Parameters.AddWithValue("@TotalWorkingHours", totalWorkingHours);
+            command.Parameters.AddWithValue("@Notes", notes ?? string.Empty);
+
+            command.ExecuteNonQuery();
+        }
+
+        /// <summary>
         /// 특정 날짜의 마감 정보 조회
         /// </summary>
         public DailySettlement? GetDailySettlement(DateTime date)

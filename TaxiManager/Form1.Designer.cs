@@ -68,8 +68,6 @@ partial class Form1
         //
         groupBoxInput.Controls.Add(textBoxNotes);
         groupBoxInput.Controls.Add(labelNotes);
-        groupBoxInput.Controls.Add(numericUpDownRevenue);
-        groupBoxInput.Controls.Add(labelRevenue);
         groupBoxInput.Controls.Add(checkBoxNightShift);
         groupBoxInput.Controls.Add(dateTimePickerEnd);
         groupBoxInput.Controls.Add(labelEndTime);
@@ -80,14 +78,14 @@ partial class Form1
         groupBoxInput.Controls.Add(btnAddShift);
         groupBoxInput.Location = new Point(12, 12);
         groupBoxInput.Name = "groupBoxInput";
-        groupBoxInput.Size = new Size(350, 320);
+        groupBoxInput.Size = new Size(350, 230);
         groupBoxInput.TabIndex = 0;
         groupBoxInput.TabStop = false;
         groupBoxInput.Text = "근무 시간 입력";
         //
         // textBoxNotes
         //
-        textBoxNotes.Location = new Point(79, 209);
+        textBoxNotes.Location = new Point(79, 155);
         textBoxNotes.Name = "textBoxNotes";
         textBoxNotes.Size = new Size(200, 23);
         textBoxNotes.TabIndex = 11;
@@ -95,7 +93,7 @@ partial class Form1
         // labelNotes
         //
         labelNotes.AutoSize = true;
-        labelNotes.Location = new Point(6, 212);
+        labelNotes.Location = new Point(6, 158);
         labelNotes.Name = "labelNotes";
         labelNotes.Size = new Size(35, 15);
         labelNotes.TabIndex = 10;
@@ -104,16 +102,16 @@ partial class Form1
         // numericUpDownRevenue
         //
         numericUpDownRevenue.DecimalPlaces = 0;
-        numericUpDownRevenue.Location = new Point(79, 180);
+        numericUpDownRevenue.Location = new Point(79, 47);
         numericUpDownRevenue.Maximum = new decimal(new int[] { 999999, 0, 0, 0 });
         numericUpDownRevenue.Name = "numericUpDownRevenue";
-        numericUpDownRevenue.Size = new Size(200, 23);
+        numericUpDownRevenue.Size = new Size(119, 23);
         numericUpDownRevenue.TabIndex = 9;
         //
         // labelRevenue
         //
         labelRevenue.AutoSize = true;
-        labelRevenue.Location = new Point(6, 183);
+        labelRevenue.Location = new Point(6, 53);
         labelRevenue.Name = "labelRevenue";
         labelRevenue.Size = new Size(35, 15);
         labelRevenue.TabIndex = 8;
@@ -185,7 +183,7 @@ partial class Form1
         //
         // btnAddShift
         //
-        btnAddShift.Location = new Point(204, 265);
+        btnAddShift.Location = new Point(204, 190);
         btnAddShift.Name = "btnAddShift";
         btnAddShift.Size = new Size(75, 23);
         btnAddShift.TabIndex = 0;
@@ -229,6 +227,8 @@ partial class Form1
         //
         // groupBoxRevenue
         //
+        groupBoxRevenue.Controls.Add(numericUpDownRevenue);
+        groupBoxRevenue.Controls.Add(labelRevenue);
         groupBoxRevenue.Controls.Add(btnDailySettlement);
         groupBoxRevenue.Controls.Add(dateTimePickerSettlement);
         groupBoxRevenue.Controls.Add(labelSettlement);
@@ -241,7 +241,7 @@ partial class Form1
         groupBoxRevenue.Controls.Add(btnMonthlyRevenue);
         groupBoxRevenue.Controls.Add(dateTimePickerMonth);
         groupBoxRevenue.Controls.Add(labelMonth);
-        groupBoxRevenue.Location = new Point(12, 350);
+        groupBoxRevenue.Location = new Point(12, 260);
         groupBoxRevenue.Name = "groupBoxRevenue";
         groupBoxRevenue.Size = new Size(350, 190);
         groupBoxRevenue.TabIndex = 2;
@@ -330,9 +330,9 @@ partial class Form1
         //
         // btnDailySettlement
         //
-        btnDailySettlement.Location = new Point(204, 20);
+        btnDailySettlement.Location = new Point(285, 20);
         btnDailySettlement.Name = "btnDailySettlement";
-        btnDailySettlement.Size = new Size(75, 23);
+        btnDailySettlement.Size = new Size(59, 50);
         btnDailySettlement.TabIndex = 12;
         btnDailySettlement.Text = "일별마감";
         btnDailySettlement.UseVisualStyleBackColor = true;

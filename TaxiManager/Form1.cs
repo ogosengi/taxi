@@ -1,3 +1,4 @@
+using System.Linq;
 using TaxiManager.Models;
 using TaxiManager.Services;
 
@@ -12,6 +13,7 @@ public partial class Form1 : Form
         InitializeComponent();
         _dataService = new TaxiDataService();
         LoadWorkShifts();
+        ClearInputs();
     }
 
     /// <summary>
@@ -61,7 +63,7 @@ public partial class Form1 : Form
                 StartTime = TimeOnly.FromDateTime(dateTimePickerStart.Value),
                 EndTime = TimeOnly.FromDateTime(dateTimePickerEnd.Value),
                 IsNightShift = checkBoxNightShift.Checked,
-                Revenue = numericUpDownRevenue.Value,
+                Revenue = 0, // 근무시간 입력 시에는 매출을 0으로 설정
                 Notes = textBoxNotes.Text
             };
 
@@ -85,7 +87,6 @@ public partial class Form1 : Form
         dateTimePickerStart.Value = DateTime.Today.AddHours(10);
         dateTimePickerEnd.Value = DateTime.Today.AddHours(15);
         checkBoxNightShift.Checked = false;
-        numericUpDownRevenue.Value = 0;
         textBoxNotes.Text = "";
     }
 
@@ -148,9 +149,21 @@ public partial class Form1 : Form
     private void btnDailySettlement_Click(object sender, EventArgs e)
     {
         var selectedDate = dateTimePickerSettlement.Value.Date;
+        var dailyRevenue = numericUpDownRevenue.Value;
 
         try
         {
+            // 매출이 입력되지 않았는지 확인
+            if (dailyRevenue <= 0)
+            {
+                MessageBox.Show(
+                    "매출을 입력해주세요.",
+                    "매출 입력 필요",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
             // 이미 마감된 날짜인지 확인
             if (_dataService.IsDateSettled(selectedDate))
             {
@@ -165,8 +178,11 @@ public partial class Form1 : Form
             }
 
             // 해당 날짜의 근무 기록이 있는지 확인
-            var dailyRevenue = _dataService.GetDailyRevenue(selectedDate);
-            if (dailyRevenue == 0)
+            var workShifts = _dataService.GetAllWorkShifts()
+                .Where(x => x.Date.Date == selectedDate.Date)
+                .ToList();
+
+            if (!workShifts.Any())
             {
                 MessageBox.Show(
                     $"{selectedDate:yyyy-MM-dd}에 등록된 근무 기록이 없습니다.",
@@ -176,14 +192,17 @@ public partial class Form1 : Form
                 return;
             }
 
-            // 일별 마감 처리
-            _dataService.CreateDailySettlement(selectedDate);
+            // 일별 마감 처리 (매출과 함께)
+            _dataService.CreateDailySettlementWithRevenue(selectedDate, dailyRevenue);
 
             MessageBox.Show(
                 $"{selectedDate:yyyy-MM-dd} 일별 마감이 완료되었습니다.\n총 매출: {dailyRevenue:C}",
                 "마감 완료",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
+
+            // 매출 입력 초기화
+            numericUpDownRevenue.Value = 0;
 
         }
         catch (Exception ex)
