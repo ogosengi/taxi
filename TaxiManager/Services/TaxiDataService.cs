@@ -87,6 +87,48 @@ namespace TaxiManager.Services
         }
 
         /// <summary>
+        /// 특정 기간의 총 매출을 계산
+        /// </summary>
+        public decimal GetPeriodRevenue(DateTime startDate, DateTime endDate)
+        {
+            return _workShifts
+                .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date && x.IsCompleted)
+                .Sum(x => x.Revenue);
+        }
+
+        /// <summary>
+        /// 특정 기간의 총 근무시간을 계산
+        /// </summary>
+        public double GetPeriodWorkingHours(DateTime startDate, DateTime endDate)
+        {
+            return _workShifts
+                .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date && x.IsCompleted)
+                .Sum(x => x.ActualWorkingHours);
+        }
+
+        /// <summary>
+        /// 운행 현황 통계 조회
+        /// </summary>
+        public TaxiOperationStats GetOperationStats(DateTime startDate, DateTime endDate)
+        {
+            var shifts = _workShifts
+                .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date)
+                .ToList();
+
+            return new TaxiOperationStats
+            {
+                TotalShifts = shifts.Count,
+                CompletedShifts = shifts.Count(x => x.IsCompleted),
+                TotalRevenue = shifts.Where(x => x.IsCompleted).Sum(x => x.Revenue),
+                TotalWorkingHours = shifts.Where(x => x.IsCompleted).Sum(x => x.ActualWorkingHours),
+                AverageRevenuePerHour = shifts.Where(x => x.IsCompleted && x.ActualWorkingHours > 0)
+                    .Select(x => x.Revenue / (decimal)x.ActualWorkingHours)
+                    .DefaultIfEmpty(0)
+                    .Average()
+            };
+        }
+
+        /// <summary>
         /// 데이터를 파일에서 로드
         /// </summary>
         private List<TaxiWorkShift> LoadData()

@@ -17,39 +17,51 @@ namespace TaxiManager.Models
         public bool IsCompleted { get; set; } // 마감 여부
 
         /// <summary>
-        /// 근무 시간대 타입을 반환
+        /// 근무 시간대 타입을 반환 (사용자 정의 시간 지원)
         /// </summary>
         public string ShiftType
         {
             get
             {
-                if (StartTime.Hour == 10 && EndTime.Hour == 15)
-                    return "오전 근무 (10:00-15:00)";
-                else if (StartTime.Hour == 19)
-                    return "야간 근무 (19:00-02:00)";
-                else
-                    return "사용자 정의 근무";
+                return $"근무시간 ({StartTime:HH:mm}-{EndTime:HH:mm})";
             }
         }
 
         /// <summary>
-        /// 근무 시간을 계산 (시간 단위)
+        /// 근무 시간을 계산 (시간 단위) - 다음날까지 이어지는 근무 지원
         /// </summary>
         public double WorkingHours
         {
             get
             {
-                if (IsNightShift)
+                if (IsNightShift || EndTime < StartTime)
                 {
-                    // 야간 근무의 경우 다음날 2시까지
-                    var endDateTime = new DateTime(Date.Year, Date.Month, Date.Day, 23, 59, 59).AddDays(1).Date.AddHours(2);
+                    // 다음날까지 이어지는 근무인 경우
                     var startDateTime = Date.Date.Add(StartTime.ToTimeSpan());
+                    var endDateTime = Date.Date.AddDays(1).Add(EndTime.ToTimeSpan());
                     return (endDateTime - startDateTime).TotalHours;
                 }
                 else
                 {
+                    // 같은 날 내에서 끝나는 근무
                     return (EndTime.ToTimeSpan() - StartTime.ToTimeSpan()).TotalHours;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 중간 휴식시간 (분 단위)
+        /// </summary>
+        public int BreakMinutes { get; set; } = 0;
+
+        /// <summary>
+        /// 실제 근무 시간 (휴식시간 제외)
+        /// </summary>
+        public double ActualWorkingHours
+        {
+            get
+            {
+                return WorkingHours - (BreakMinutes / 60.0);
             }
         }
     }

@@ -61,6 +61,8 @@ partial class Form1
         //
         // groupBoxInput
         //
+        groupBoxInput.Controls.Add(numericUpDownBreak);
+        groupBoxInput.Controls.Add(labelBreak);
         groupBoxInput.Controls.Add(labelShiftType);
         groupBoxInput.Controls.Add(comboBoxShiftType);
         groupBoxInput.Controls.Add(checkBoxCompleted);
@@ -78,7 +80,7 @@ partial class Form1
         groupBoxInput.Controls.Add(btnAddShift);
         groupBoxInput.Location = new Point(12, 12);
         groupBoxInput.Name = "groupBoxInput";
-        groupBoxInput.Size = new Size(350, 280);
+        groupBoxInput.Size = new Size(350, 320);
         groupBoxInput.TabIndex = 0;
         groupBoxInput.TabStop = false;
         groupBoxInput.Text = "근무 시간 입력";
@@ -96,7 +98,7 @@ partial class Form1
         //
         comboBoxShiftType.DropDownStyle = ComboBoxStyle.DropDownList;
         comboBoxShiftType.FormattingEnabled = true;
-        comboBoxShiftType.Items.AddRange(new object[] { "오전 근무 (10:00-15:00)", "야간 근무 (19:00-02:00)", "사용자 정의" });
+        comboBoxShiftType.Items.AddRange(new object[] { "일반 근무 (10:00-15:00)", "야간 근무 (19:00-02:00)", "24시간 근무 (10:00-다음날 10:00)", "사용자 정의" });
         comboBoxShiftType.Location = new Point(79, 22);
         comboBoxShiftType.Name = "comboBoxShiftType";
         comboBoxShiftType.Size = new Size(200, 23);
@@ -106,7 +108,7 @@ partial class Form1
         // checkBoxCompleted
         //
         checkBoxCompleted.AutoSize = true;
-        checkBoxCompleted.Location = new Point(79, 215);
+        checkBoxCompleted.Location = new Point(79, 238);
         checkBoxCompleted.Name = "checkBoxCompleted";
         checkBoxCompleted.Size = new Size(62, 19);
         checkBoxCompleted.TabIndex = 12;
@@ -115,7 +117,7 @@ partial class Form1
         //
         // textBoxNotes
         //
-        textBoxNotes.Location = new Point(79, 180);
+        textBoxNotes.Location = new Point(79, 209);
         textBoxNotes.Name = "textBoxNotes";
         textBoxNotes.Size = new Size(200, 23);
         textBoxNotes.TabIndex = 11;
@@ -123,7 +125,7 @@ partial class Form1
         // labelNotes
         //
         labelNotes.AutoSize = true;
-        labelNotes.Location = new Point(6, 183);
+        labelNotes.Location = new Point(6, 212);
         labelNotes.Name = "labelNotes";
         labelNotes.Size = new Size(35, 15);
         labelNotes.TabIndex = 10;
@@ -132,7 +134,7 @@ partial class Form1
         // numericUpDownRevenue
         //
         numericUpDownRevenue.DecimalPlaces = 0;
-        numericUpDownRevenue.Location = new Point(79, 151);
+        numericUpDownRevenue.Location = new Point(79, 180);
         numericUpDownRevenue.Maximum = new decimal(new int[] { 999999, 0, 0, 0 });
         numericUpDownRevenue.Name = "numericUpDownRevenue";
         numericUpDownRevenue.Size = new Size(200, 23);
@@ -141,7 +143,7 @@ partial class Form1
         // labelRevenue
         //
         labelRevenue.AutoSize = true;
-        labelRevenue.Location = new Point(6, 153);
+        labelRevenue.Location = new Point(6, 183);
         labelRevenue.Name = "labelRevenue";
         labelRevenue.Size = new Size(35, 15);
         labelRevenue.TabIndex = 8;
@@ -213,7 +215,7 @@ partial class Form1
         //
         // btnAddShift
         //
-        btnAddShift.Location = new Point(204, 240);
+        btnAddShift.Location = new Point(204, 265);
         btnAddShift.Name = "btnAddShift";
         btnAddShift.Size = new Size(75, 23);
         btnAddShift.TabIndex = 0;
@@ -257,13 +259,18 @@ partial class Form1
         //
         // groupBoxRevenue
         //
+        groupBoxRevenue.Controls.Add(btnPeriodStats);
+        groupBoxRevenue.Controls.Add(dateTimePickerPeriodEnd);
+        groupBoxRevenue.Controls.Add(labelPeriodEnd);
+        groupBoxRevenue.Controls.Add(dateTimePickerPeriodStart);
+        groupBoxRevenue.Controls.Add(labelPeriodStart);
         groupBoxRevenue.Controls.Add(labelMonthlyRevenue);
         groupBoxRevenue.Controls.Add(btnMonthlyRevenue);
         groupBoxRevenue.Controls.Add(dateTimePickerMonth);
         groupBoxRevenue.Controls.Add(labelMonth);
-        groupBoxRevenue.Location = new Point(12, 310);
+        groupBoxRevenue.Location = new Point(12, 350);
         groupBoxRevenue.Name = "groupBoxRevenue";
-        groupBoxRevenue.Size = new Size(350, 102);
+        groupBoxRevenue.Size = new Size(350, 180);
         groupBoxRevenue.TabIndex = 2;
         groupBoxRevenue.TabStop = false;
         groupBoxRevenue.Text = "매출 조회";
@@ -306,11 +313,70 @@ partial class Form1
         labelMonth.TabIndex = 0;
         labelMonth.Text = "월별:";
         //
+        // numericUpDownBreak
+        //
+        numericUpDownBreak.Location = new Point(79, 151);
+        numericUpDownBreak.Maximum = new decimal(new int[] { 480, 0, 0, 0 });
+        numericUpDownBreak.Name = "numericUpDownBreak";
+        numericUpDownBreak.Size = new Size(200, 23);
+        numericUpDownBreak.TabIndex = 15;
+        //
+        // labelBreak
+        //
+        labelBreak.AutoSize = true;
+        labelBreak.Location = new Point(6, 153);
+        labelBreak.Name = "labelBreak";
+        labelBreak.Size = new Size(63, 15);
+        labelBreak.TabIndex = 16;
+        labelBreak.Text = "휴식(분):";
+        //
+        // btnPeriodStats
+        //
+        btnPeriodStats.Location = new Point(204, 130);
+        btnPeriodStats.Name = "btnPeriodStats";
+        btnPeriodStats.Size = new Size(75, 23);
+        btnPeriodStats.TabIndex = 9;
+        btnPeriodStats.Text = "통계";
+        btnPeriodStats.UseVisualStyleBackColor = true;
+        btnPeriodStats.Click += btnPeriodStats_Click;
+        //
+        // dateTimePickerPeriodEnd
+        //
+        dateTimePickerPeriodEnd.Location = new Point(79, 130);
+        dateTimePickerPeriodEnd.Name = "dateTimePickerPeriodEnd";
+        dateTimePickerPeriodEnd.Size = new Size(119, 23);
+        dateTimePickerPeriodEnd.TabIndex = 8;
+        //
+        // labelPeriodEnd
+        //
+        labelPeriodEnd.AutoSize = true;
+        labelPeriodEnd.Location = new Point(6, 136);
+        labelPeriodEnd.Name = "labelPeriodEnd";
+        labelPeriodEnd.Size = new Size(47, 15);
+        labelPeriodEnd.TabIndex = 7;
+        labelPeriodEnd.Text = "종료일:";
+        //
+        // dateTimePickerPeriodStart
+        //
+        dateTimePickerPeriodStart.Location = new Point(79, 100);
+        dateTimePickerPeriodStart.Name = "dateTimePickerPeriodStart";
+        dateTimePickerPeriodStart.Size = new Size(119, 23);
+        dateTimePickerPeriodStart.TabIndex = 6;
+        //
+        // labelPeriodStart
+        //
+        labelPeriodStart.AutoSize = true;
+        labelPeriodStart.Location = new Point(6, 106);
+        labelPeriodStart.Name = "labelPeriodStart";
+        labelPeriodStart.Size = new Size(47, 15);
+        labelPeriodStart.TabIndex = 5;
+        labelPeriodStart.Text = "시작일:";
+        //
         // Form1
         //
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1000, 430);
+        ClientSize = new Size(1000, 550);
         Controls.Add(groupBoxRevenue);
         Controls.Add(groupBoxList);
         Controls.Add(groupBoxInput);
@@ -352,4 +418,11 @@ partial class Form1
     private Button btnMonthlyRevenue;
     private DateTimePicker dateTimePickerMonth;
     private Label labelMonth;
+    private NumericUpDown numericUpDownBreak;
+    private Label labelBreak;
+    private Button btnPeriodStats;
+    private DateTimePicker dateTimePickerPeriodEnd;
+    private Label labelPeriodEnd;
+    private DateTimePicker dateTimePickerPeriodStart;
+    private Label labelPeriodStart;
 }
