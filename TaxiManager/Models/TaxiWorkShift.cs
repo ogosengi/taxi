@@ -49,20 +49,5 @@ namespace TaxiManager.Models
             }
         }
 
-        /// <summary>
-        /// 중간 휴식시간 (분 단위)
-        /// </summary>
-        public int BreakMinutes { get; set; } = 0;
-
-        /// <summary>
-        /// 실제 근무 시간 (휴식시간 제외)
-        /// </summary>
-        public double ActualWorkingHours
-        {
-            get
-            {
-                return WorkingHours - (BreakMinutes / 60.0);
-            }
-        }
     }
 }

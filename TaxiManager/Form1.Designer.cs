@@ -29,8 +29,6 @@ partial class Form1
     private void InitializeComponent()
     {
         groupBoxInput = new GroupBox();
-        labelShiftType = new Label();
-        comboBoxShiftType = new ComboBox();
         checkBoxCompleted = new CheckBox();
         textBoxNotes = new TextBox();
         labelNotes = new Label();
@@ -52,8 +50,6 @@ partial class Form1
         btnMonthlyRevenue = new Button();
         dateTimePickerMonth = new DateTimePicker();
         labelMonth = new Label();
-        numericUpDownBreak = new NumericUpDown();
-        labelBreak = new Label();
         btnPeriodStats = new Button();
         dateTimePickerPeriodEnd = new DateTimePicker();
         labelPeriodEnd = new Label();
@@ -61,7 +57,6 @@ partial class Form1
         labelPeriodStart = new Label();
         groupBoxInput.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)numericUpDownRevenue).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)numericUpDownBreak).BeginInit();
         groupBoxList.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
         groupBoxRevenue.SuspendLayout();
@@ -69,10 +64,6 @@ partial class Form1
         //
         // groupBoxInput
         //
-        groupBoxInput.Controls.Add(numericUpDownBreak);
-        groupBoxInput.Controls.Add(labelBreak);
-        groupBoxInput.Controls.Add(labelShiftType);
-        groupBoxInput.Controls.Add(comboBoxShiftType);
         groupBoxInput.Controls.Add(checkBoxCompleted);
         groupBoxInput.Controls.Add(textBoxNotes);
         groupBoxInput.Controls.Add(labelNotes);
@@ -92,26 +83,6 @@ partial class Form1
         groupBoxInput.TabIndex = 0;
         groupBoxInput.TabStop = false;
         groupBoxInput.Text = "근무 시간 입력";
-        //
-        // labelShiftType
-        //
-        labelShiftType.AutoSize = true;
-        labelShiftType.Location = new Point(6, 25);
-        labelShiftType.Name = "labelShiftType";
-        labelShiftType.Size = new Size(67, 15);
-        labelShiftType.TabIndex = 14;
-        labelShiftType.Text = "근무 타입:";
-        //
-        // comboBoxShiftType
-        //
-        comboBoxShiftType.DropDownStyle = ComboBoxStyle.DropDownList;
-        comboBoxShiftType.FormattingEnabled = true;
-        comboBoxShiftType.Items.AddRange(new object[] { "일반 근무 (10:00-15:00)", "야간 근무 (19:00-02:00)", "24시간 근무 (10:00-다음날 10:00)", "사용자 정의" });
-        comboBoxShiftType.Location = new Point(79, 22);
-        comboBoxShiftType.Name = "comboBoxShiftType";
-        comboBoxShiftType.Size = new Size(200, 23);
-        comboBoxShiftType.TabIndex = 13;
-        comboBoxShiftType.SelectedIndexChanged += comboBoxShiftType_SelectedIndexChanged;
         //
         // checkBoxCompleted
         //
@@ -169,7 +140,7 @@ partial class Form1
         //
         // dateTimePickerEnd
         //
-        dateTimePickerEnd.CustomFormat = "HH:mm";
+        dateTimePickerEnd.CustomFormat = "HH:00";
         dateTimePickerEnd.Format = DateTimePickerFormat.Custom;
         dateTimePickerEnd.Location = new Point(79, 97);
         dateTimePickerEnd.Name = "dateTimePickerEnd";
@@ -188,7 +159,7 @@ partial class Form1
         //
         // dateTimePickerStart
         //
-        dateTimePickerStart.CustomFormat = "HH:mm";
+        dateTimePickerStart.CustomFormat = "HH:00";
         dateTimePickerStart.Format = DateTimePickerFormat.Custom;
         dateTimePickerStart.Location = new Point(79, 78);
         dateTimePickerStart.Name = "dateTimePickerStart";
@@ -321,23 +292,6 @@ partial class Form1
         labelMonth.TabIndex = 0;
         labelMonth.Text = "월별:";
         //
-        // numericUpDownBreak
-        //
-        numericUpDownBreak.Location = new Point(79, 151);
-        numericUpDownBreak.Maximum = new decimal(new int[] { 480, 0, 0, 0 });
-        numericUpDownBreak.Name = "numericUpDownBreak";
-        numericUpDownBreak.Size = new Size(200, 23);
-        numericUpDownBreak.TabIndex = 15;
-        //
-        // labelBreak
-        //
-        labelBreak.AutoSize = true;
-        labelBreak.Location = new Point(6, 153);
-        labelBreak.Name = "labelBreak";
-        labelBreak.Size = new Size(63, 15);
-        labelBreak.TabIndex = 16;
-        labelBreak.Text = "휴식(분):";
-        //
         // btnPeriodStats
         //
         btnPeriodStats.Location = new Point(204, 130);
@@ -393,7 +347,6 @@ partial class Form1
         groupBoxInput.ResumeLayout(false);
         groupBoxInput.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)numericUpDownRevenue).EndInit();
-        ((System.ComponentModel.ISupportInitialize)numericUpDownBreak).EndInit();
         groupBoxList.ResumeLayout(false);
         ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
         groupBoxRevenue.ResumeLayout(false);
@@ -404,8 +357,6 @@ partial class Form1
     #endregion
 
     private GroupBox groupBoxInput;
-    private Label labelShiftType;
-    private ComboBox comboBoxShiftType;
     private CheckBox checkBoxCompleted;
     private TextBox textBoxNotes;
     private Label labelNotes;
@@ -427,8 +378,6 @@ partial class Form1
     private Button btnMonthlyRevenue;
     private DateTimePicker dateTimePickerMonth;
     private Label labelMonth;
-    private NumericUpDown numericUpDownBreak;
-    private Label labelBreak;
     private Button btnPeriodStats;
     private DateTimePicker dateTimePickerPeriodEnd;
     private Label labelPeriodEnd;

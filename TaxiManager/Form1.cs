@@ -39,7 +39,6 @@ public partial class Form1 : Form
                 Revenue = numericUpDownRevenue.Value,
                 Notes = textBoxNotes.Text,
                 IsCompleted = checkBoxCompleted.Checked,
-                BreakMinutes = (int)numericUpDownBreak.Value
             };
 
             _dataService.AddWorkShift(workShift);
@@ -63,38 +62,10 @@ public partial class Form1 : Form
         dateTimePickerEnd.Value = DateTime.Today.AddHours(15);
         checkBoxNightShift.Checked = false;
         numericUpDownRevenue.Value = 0;
-        numericUpDownBreak.Value = 0;
         textBoxNotes.Text = "";
         checkBoxCompleted.Checked = false;
     }
 
-    /// <summary>
-    /// 미리 정의된 근무 시간 선택 변경 (완전 유연한 시간 설정 지원)
-    /// </summary>
-    private void comboBoxShiftType_SelectedIndexChanged(object sender, EventArgs e)
-    {
-        switch (comboBoxShiftType.SelectedIndex)
-        {
-            case 0: // 일반 근무 (10:00-15:00)
-                dateTimePickerStart.Value = DateTime.Today.AddHours(10);
-                dateTimePickerEnd.Value = DateTime.Today.AddHours(15);
-                checkBoxNightShift.Checked = false;
-                break;
-            case 1: // 야간 근무 (19:00-02:00)
-                dateTimePickerStart.Value = DateTime.Today.AddHours(19);
-                dateTimePickerEnd.Value = DateTime.Today.AddHours(2);
-                checkBoxNightShift.Checked = true;
-                break;
-            case 2: // 24시간 근무 (10:00-다음날 10:00)
-                dateTimePickerStart.Value = DateTime.Today.AddHours(10);
-                dateTimePickerEnd.Value = DateTime.Today.AddHours(10);
-                checkBoxNightShift.Checked = true;
-                break;
-            case 3: // 사용자 정의 (현재 설정 유지)
-                // 아무 변경 없음 - 사용자가 직접 설정
-                break;
-        }
-    }
 
     /// <summary>
     /// 선택된 근무 시간 삭제

@@ -2,23 +2,46 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
+using Microsoft.Data.Sqlite;
 using TaxiManager.Models;
 
 namespace TaxiManager.Services
 {
     /// <summary>
-    /// 택시 운행 데이터를 관리하는 서비스 클래스
+    /// 택시 운행 데이터를 관리하는 서비스 클래스 (SQLite 사용)
     /// </summary>
     public class TaxiDataService
     {
-        private readonly string _dataFilePath;
-        private List<TaxiWorkShift> _workShifts;
+        private readonly string _connectionString;
 
         public TaxiDataService()
         {
-            _dataFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "taxidata.json");
-            _workShifts = LoadData();
+            var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "taxidata.db");
+            _connectionString = $"Data Source={dbPath}";
+            InitializeDatabase();
+        }
+
+        /// <summary>
+        /// 데이터베이스 초기화
+        /// </summary>
+        private void InitializeDatabase()
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                CREATE TABLE IF NOT EXISTS WorkShifts (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Date TEXT NOT NULL,
+                    StartTime TEXT NOT NULL,
+                    EndTime TEXT NOT NULL,
+                    IsNightShift INTEGER NOT NULL,
+                    Revenue REAL NOT NULL,
+                    Notes TEXT,
+                    IsCompleted INTEGER NOT NULL
+                )";
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -26,7 +49,31 @@ namespace TaxiManager.Services
         /// </summary>
         public List<TaxiWorkShift> GetAllWorkShifts()
         {
-            return _workShifts.OrderByDescending(x => x.Date).ToList();
+            var workShifts = new List<TaxiWorkShift>();
+
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = "SELECT * FROM WorkShifts ORDER BY Date DESC";
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                workShifts.Add(new TaxiWorkShift
+                {
+                    Id = reader.GetInt32(0),
+                    Date = DateTime.Parse(reader.GetString(1)),
+                    StartTime = TimeOnly.Parse(reader.GetString(2)),
+                    EndTime = TimeOnly.Parse(reader.GetString(3)),
+                    IsNightShift = reader.GetInt32(4) == 1,
+                    Revenue = reader.GetDecimal(5),
+                    Notes = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    IsCompleted = reader.GetInt32(7) == 1
+                });
+            }
+
+            return workShifts;
         }
 
         /// <summary>
@@ -34,9 +81,23 @@ namespace TaxiManager.Services
         /// </summary>
         public void AddWorkShift(TaxiWorkShift workShift)
         {
-            workShift.Id = _workShifts.Count > 0 ? _workShifts.Max(x => x.Id) + 1 : 1;
-            _workShifts.Add(workShift);
-            SaveData();
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                INSERT INTO WorkShifts (Date, StartTime, EndTime, IsNightShift, Revenue, Notes, IsCompleted)
+                VALUES (@Date, @StartTime, @EndTime, @IsNightShift, @Revenue, @Notes, @IsCompleted)";
+
+            command.Parameters.AddWithValue("@Date", workShift.Date.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@StartTime", workShift.StartTime.ToString("HH:mm"));
+            command.Parameters.AddWithValue("@EndTime", workShift.EndTime.ToString("HH:mm"));
+            command.Parameters.AddWithValue("@IsNightShift", workShift.IsNightShift);
+            command.Parameters.AddWithValue("@Revenue", workShift.Revenue);
+            command.Parameters.AddWithValue("@Notes", workShift.Notes ?? string.Empty);
+            command.Parameters.AddWithValue("@IsCompleted", workShift.IsCompleted);
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -44,13 +105,26 @@ namespace TaxiManager.Services
         /// </summary>
         public void UpdateWorkShift(TaxiWorkShift workShift)
         {
-            var existing = _workShifts.FirstOrDefault(x => x.Id == workShift.Id);
-            if (existing != null)
-            {
-                var index = _workShifts.IndexOf(existing);
-                _workShifts[index] = workShift;
-                SaveData();
-            }
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                UPDATE WorkShifts
+                SET Date = @Date, StartTime = @StartTime, EndTime = @EndTime,
+                    IsNightShift = @IsNightShift, Revenue = @Revenue, Notes = @Notes, IsCompleted = @IsCompleted
+                WHERE Id = @Id";
+
+            command.Parameters.AddWithValue("@Id", workShift.Id);
+            command.Parameters.AddWithValue("@Date", workShift.Date.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@StartTime", workShift.StartTime.ToString("HH:mm"));
+            command.Parameters.AddWithValue("@EndTime", workShift.EndTime.ToString("HH:mm"));
+            command.Parameters.AddWithValue("@IsNightShift", workShift.IsNightShift);
+            command.Parameters.AddWithValue("@Revenue", workShift.Revenue);
+            command.Parameters.AddWithValue("@Notes", workShift.Notes ?? string.Empty);
+            command.Parameters.AddWithValue("@IsCompleted", workShift.IsCompleted);
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -58,12 +132,14 @@ namespace TaxiManager.Services
         /// </summary>
         public void DeleteWorkShift(int id)
         {
-            var workShift = _workShifts.FirstOrDefault(x => x.Id == id);
-            if (workShift != null)
-            {
-                _workShifts.Remove(workShift);
-                SaveData();
-            }
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = "DELETE FROM WorkShifts WHERE Id = @Id";
+            command.Parameters.AddWithValue("@Id", id);
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -71,9 +147,17 @@ namespace TaxiManager.Services
         /// </summary>
         public decimal GetDailyRevenue(DateTime date)
         {
-            return _workShifts
-                .Where(x => x.Date.Date == date.Date && x.IsCompleted)
-                .Sum(x => x.Revenue);
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT SUM(Revenue) FROM WorkShifts
+                WHERE Date = @Date AND IsCompleted = 1";
+            command.Parameters.AddWithValue("@Date", date.ToString("yyyy-MM-dd"));
+
+            var result = command.ExecuteScalar();
+            return result == DBNull.Value ? 0 : Convert.ToDecimal(result);
         }
 
         /// <summary>
@@ -81,9 +165,20 @@ namespace TaxiManager.Services
         /// </summary>
         public decimal GetMonthlyRevenue(int year, int month)
         {
-            return _workShifts
-                .Where(x => x.Date.Year == year && x.Date.Month == month && x.IsCompleted)
-                .Sum(x => x.Revenue);
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT SUM(Revenue) FROM WorkShifts
+                WHERE strftime('%Y', Date) = @Year
+                AND strftime('%m', Date) = @Month
+                AND IsCompleted = 1";
+            command.Parameters.AddWithValue("@Year", year.ToString());
+            command.Parameters.AddWithValue("@Month", month.ToString("D2"));
+
+            var result = command.ExecuteScalar();
+            return result == DBNull.Value ? 0 : Convert.ToDecimal(result);
         }
 
         /// <summary>
@@ -91,9 +186,18 @@ namespace TaxiManager.Services
         /// </summary>
         public decimal GetPeriodRevenue(DateTime startDate, DateTime endDate)
         {
-            return _workShifts
-                .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date && x.IsCompleted)
-                .Sum(x => x.Revenue);
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT SUM(Revenue) FROM WorkShifts
+                WHERE Date >= @StartDate AND Date <= @EndDate AND IsCompleted = 1";
+            command.Parameters.AddWithValue("@StartDate", startDate.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@EndDate", endDate.ToString("yyyy-MM-dd"));
+
+            var result = command.ExecuteScalar();
+            return result == DBNull.Value ? 0 : Convert.ToDecimal(result);
         }
 
         /// <summary>
@@ -101,9 +205,11 @@ namespace TaxiManager.Services
         /// </summary>
         public double GetPeriodWorkingHours(DateTime startDate, DateTime endDate)
         {
-            return _workShifts
+            var shifts = GetAllWorkShifts()
                 .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date && x.IsCompleted)
-                .Sum(x => x.ActualWorkingHours);
+                .ToList();
+
+            return shifts.Sum(x => x.WorkingHours);
         }
 
         /// <summary>
@@ -111,7 +217,7 @@ namespace TaxiManager.Services
         /// </summary>
         public TaxiOperationStats GetOperationStats(DateTime startDate, DateTime endDate)
         {
-            var shifts = _workShifts
+            var shifts = GetAllWorkShifts()
                 .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date)
                 .ToList();
 
@@ -120,47 +226,12 @@ namespace TaxiManager.Services
                 TotalShifts = shifts.Count,
                 CompletedShifts = shifts.Count(x => x.IsCompleted),
                 TotalRevenue = shifts.Where(x => x.IsCompleted).Sum(x => x.Revenue),
-                TotalWorkingHours = shifts.Where(x => x.IsCompleted).Sum(x => x.ActualWorkingHours),
-                AverageRevenuePerHour = shifts.Where(x => x.IsCompleted && x.ActualWorkingHours > 0)
-                    .Select(x => x.Revenue / (decimal)x.ActualWorkingHours)
+                TotalWorkingHours = shifts.Where(x => x.IsCompleted).Sum(x => x.WorkingHours),
+                AverageRevenuePerHour = shifts.Where(x => x.IsCompleted && x.WorkingHours > 0)
+                    .Select(x => x.Revenue / (decimal)x.WorkingHours)
                     .DefaultIfEmpty(0)
                     .Average()
             };
-        }
-
-        /// <summary>
-        /// 데이터를 파일에서 로드
-        /// </summary>
-        private List<TaxiWorkShift> LoadData()
-        {
-            if (!File.Exists(_dataFilePath))
-                return new List<TaxiWorkShift>();
-
-            try
-            {
-                var json = File.ReadAllText(_dataFilePath);
-                return JsonSerializer.Deserialize<List<TaxiWorkShift>>(json) ?? new List<TaxiWorkShift>();
-            }
-            catch
-            {
-                return new List<TaxiWorkShift>();
-            }
-        }
-
-        /// <summary>
-        /// 데이터를 파일에 저장
-        /// </summary>
-        private void SaveData()
-        {
-            try
-            {
-                var json = JsonSerializer.Serialize(_workShifts, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(_dataFilePath, json);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"데이터 저장 중 오류가 발생했습니다: {ex.Message}");
-            }
         }
     }
 }

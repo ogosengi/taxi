@@ -12,7 +12,8 @@
       "Bash(gh repo create:*)",
       "Bash(where gh)",
       "Bash(gh.exe repo create:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(dotnet add package:*)"
     ],
     "deny": [],
     "ask": []
