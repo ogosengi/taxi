@@ -4,7 +4,9 @@
 - **프로젝트명**: TaxiManager
 - **타입**: Windows Forms 애플리케이션
 - **언어**: C#
+- **세션 컨텍스트**: CLAUDE.md(현재 파일). 소스 업데이트시 이 파일도 항상 업데이트
 - **GitHub 저장소**: https://github.com/ogosengi/taxi
+
 
 ## 요구사항
 - C# Windows Forms 애플리케이션
@@ -60,7 +62,8 @@
 6. TaxiDataService 완전히 재작성 - SQLite CRUD 작업 구현
 7. TaxiWorkShift 모델 단순화 - BreakMinutes, ActualWorkingHours 제거
 8. 데이터베이스 자동 초기화 및 테이블 생성 기능 구현
-9. 최종 빌드 및 실행 테스트 성공
+9. 데이터베이스 테이블 및 컬럼명을 한글로 변경
+10. 최종 빌드 및 실행 테스트 성공
 
 ## 다음 세션을 위한 정보
 - 작업 디렉토리: D:\DEV\vibe\taxi
@@ -83,6 +86,20 @@ dotnet run --project TaxiManager
 
 # 데이터베이스 파일 위치
 # D:\DEV\vibe\taxi\TaxiManager\bin\Debug\net8.0-windows\taxidata.db
+```
+
+## 데이터베이스 스키마
+```sql
+CREATE TABLE 근무시간 (
+    아이디 INTEGER PRIMARY KEY AUTOINCREMENT,
+    날짜 TEXT NOT NULL,
+    시작시간 TEXT NOT NULL,
+    종료시간 TEXT NOT NULL,
+    야간근무여부 INTEGER NOT NULL,
+    매출 REAL NOT NULL,
+    메모 TEXT,
+    마감여부 INTEGER NOT NULL
+);
 ```
 
 ---
