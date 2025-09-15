@@ -52,8 +52,16 @@ partial class Form1
         btnMonthlyRevenue = new Button();
         dateTimePickerMonth = new DateTimePicker();
         labelMonth = new Label();
+        numericUpDownBreak = new NumericUpDown();
+        labelBreak = new Label();
+        btnPeriodStats = new Button();
+        dateTimePickerPeriodEnd = new DateTimePicker();
+        labelPeriodEnd = new Label();
+        dateTimePickerPeriodStart = new DateTimePicker();
+        labelPeriodStart = new Label();
         groupBoxInput.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)numericUpDownRevenue).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)numericUpDownBreak).BeginInit();
         groupBoxList.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
         groupBoxRevenue.SuspendLayout();
@@ -385,6 +393,7 @@ partial class Form1
         groupBoxInput.ResumeLayout(false);
         groupBoxInput.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)numericUpDownRevenue).EndInit();
+        ((System.ComponentModel.ISupportInitialize)numericUpDownBreak).EndInit();
         groupBoxList.ResumeLayout(false);
         ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
         groupBoxRevenue.ResumeLayout(false);
