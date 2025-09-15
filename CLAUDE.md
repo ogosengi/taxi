@@ -57,6 +57,12 @@
 1. 근무타입 드롭다운 제거 - 사용자 인터페이스 단순화
 2. 시간 입력 형식을 HH:00으로 고정 - 분은 항상 00으로 설정
 3. 휴식시간 관리 기능 제거 - 근무시간만 관리하도록 단순화
+
+### 2025-09-15 (버그 수정 및 UI 개선)
+1. SQLite 테이블 스키마 문제 해결 - DROP TABLE 후 재생성으로 IsCompleted 컬럼 오류 수정
+2. UI 컨트롤 겹침 문제 해결 - 일별마감, 월별조회, 기간별통계 위치 재조정
+3. 그룹박스 크기 최적화 - 매출 조회 영역 높이 조정 (220→190)
+4. 빌드 및 실행 테스트 완료 - 모든 기능 정상 작동 확인
 4. JSON 파일 저장소를 SQLite 데이터베이스로 교체
 5. Microsoft.Data.Sqlite NuGet 패키지 추가
 6. TaxiDataService 완전히 재작성 - SQLite CRUD 작업 구현
@@ -71,7 +77,14 @@
 4. 일별마감 기능 구현 - 날짜별 총 매출 및 근무시간 계산
 5. UI에 일별마감 기능 추가 - 마감일 선택 및 처리 버튼
 6. 매출 계산 로직 변경 - 마감된 날짜만 집계
-7. 최종 빌드 및 실행 테스트 성공
+
+### 2025-09-15 (데이터베이스 국제화)
+1. 데이터베이스 테이블명을 영어로 변경 (근무시간 → WorkShifts, 일별마감 → DailySettlements)
+2. 모든 컬럼명을 영어로 변경 (아이디 → Id, 날짜 → Date, 시작시간 → StartTime 등)
+3. 모든 SQL 쿼리 및 파라미터를 영어로 업데이트
+4. UI 데이터그리드 컬럼 헤더는 한글 유지
+5. 컬럼 너비 자동 조정 기능 추가
+6. 최종 빌드 및 실행 테스트 성공
 
 ## 다음 세션을 위한 정보
 - 작업 디렉토리: D:\DEV\vibe\taxi
@@ -98,25 +111,25 @@ dotnet run --project TaxiManager
 
 ## 데이터베이스 스키마
 ```sql
--- 근무시간 테이블
-CREATE TABLE 근무시간 (
-    아이디 INTEGER PRIMARY KEY AUTOINCREMENT,
-    날짜 TEXT NOT NULL,
-    시작시간 TEXT NOT NULL,
-    종료시간 TEXT NOT NULL,
-    야간근무여부 INTEGER NOT NULL,
-    매출 REAL NOT NULL,
-    메모 TEXT
+-- 근무시간 테이블 (Work Shifts)
+CREATE TABLE WorkShifts (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Date TEXT NOT NULL,
+    StartTime TEXT NOT NULL,
+    EndTime TEXT NOT NULL,
+    IsNightShift INTEGER NOT NULL,
+    Revenue REAL NOT NULL,
+    Notes TEXT
 );
 
--- 일별마감 테이블
-CREATE TABLE 일별마감 (
-    아이디 INTEGER PRIMARY KEY AUTOINCREMENT,
-    날짜 TEXT NOT NULL UNIQUE,
-    마감일시 TEXT NOT NULL,
-    총매출 REAL NOT NULL,
-    총근무시간 REAL NOT NULL,
-    메모 TEXT
+-- 일별마감 테이블 (Daily Settlements)
+CREATE TABLE DailySettlements (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Date TEXT NOT NULL UNIQUE,
+    SettlementDateTime TEXT NOT NULL,
+    TotalRevenue REAL NOT NULL,
+    TotalWorkingHours REAL NOT NULL,
+    Notes TEXT
 );
 ```
 

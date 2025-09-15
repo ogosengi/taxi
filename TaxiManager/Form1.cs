@@ -21,6 +21,31 @@ public partial class Form1 : Form
     {
         var workShifts = _dataService.GetAllWorkShifts();
         dataGridView1.DataSource = workShifts;
+
+        // 컬럼 헤더를 한글로 설정
+        if (dataGridView1.Columns.Count > 0)
+        {
+            dataGridView1.Columns["Id"].HeaderText = "ID";
+            dataGridView1.Columns["Date"].HeaderText = "날짜";
+            dataGridView1.Columns["StartTime"].HeaderText = "시작시간";
+            dataGridView1.Columns["EndTime"].HeaderText = "종료시간";
+            dataGridView1.Columns["IsNightShift"].HeaderText = "야간근무";
+            dataGridView1.Columns["Revenue"].HeaderText = "매출";
+            dataGridView1.Columns["Notes"].HeaderText = "메모";
+            dataGridView1.Columns["ShiftType"].HeaderText = "근무타입";
+            dataGridView1.Columns["WorkingHours"].HeaderText = "근무시간";
+
+            // 컬럼 너비 조정
+            dataGridView1.Columns["Id"].Width = 50;
+            dataGridView1.Columns["Date"].Width = 100;
+            dataGridView1.Columns["StartTime"].Width = 80;
+            dataGridView1.Columns["EndTime"].Width = 80;
+            dataGridView1.Columns["IsNightShift"].Width = 80;
+            dataGridView1.Columns["Revenue"].Width = 100;
+            dataGridView1.Columns["Notes"].Width = 150;
+            dataGridView1.Columns["ShiftType"].Width = 150;
+            dataGridView1.Columns["WorkingHours"].Width = 100;
+        }
     }
 
     /// <summary>

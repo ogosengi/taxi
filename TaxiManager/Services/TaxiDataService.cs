@@ -29,28 +29,35 @@ namespace TaxiManager.Services
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
+            // 기존 테이블이 있으면 삭제하고 새로 생성
             var command = connection.CreateCommand();
+            command.CommandText = "DROP TABLE IF EXISTS WorkShifts";
+            command.ExecuteNonQuery();
+
+            command.CommandText = "DROP TABLE IF EXISTS DailySettlements";
+            command.ExecuteNonQuery();
+
             command.CommandText = @"
-                CREATE TABLE IF NOT EXISTS 근무시간 (
-                    아이디 INTEGER PRIMARY KEY AUTOINCREMENT,
-                    날짜 TEXT NOT NULL,
-                    시작시간 TEXT NOT NULL,
-                    종료시간 TEXT NOT NULL,
-                    야간근무여부 INTEGER NOT NULL,
-                    매출 REAL NOT NULL,
-                    메모 TEXT
+                CREATE TABLE WorkShifts (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Date TEXT NOT NULL,
+                    StartTime TEXT NOT NULL,
+                    EndTime TEXT NOT NULL,
+                    IsNightShift INTEGER NOT NULL,
+                    Revenue REAL NOT NULL,
+                    Notes TEXT
                 )";
             command.ExecuteNonQuery();
 
             // 일별마감 테이블 생성
             command.CommandText = @"
-                CREATE TABLE IF NOT EXISTS 일별마감 (
-                    아이디 INTEGER PRIMARY KEY AUTOINCREMENT,
-                    날짜 TEXT NOT NULL UNIQUE,
-                    마감일시 TEXT NOT NULL,
-                    총매출 REAL NOT NULL,
-                    총근무시간 REAL NOT NULL,
-                    메모 TEXT
+                CREATE TABLE DailySettlements (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Date TEXT NOT NULL UNIQUE,
+                    SettlementDateTime TEXT NOT NULL,
+                    TotalRevenue REAL NOT NULL,
+                    TotalWorkingHours REAL NOT NULL,
+                    Notes TEXT
                 )";
             command.ExecuteNonQuery();
         }
@@ -66,7 +73,7 @@ namespace TaxiManager.Services
             connection.Open();
 
             var command = connection.CreateCommand();
-            command.CommandText = "SELECT * FROM 근무시간 ORDER BY 날짜 DESC";
+            command.CommandText = "SELECT * FROM WorkShifts ORDER BY Date DESC";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -96,15 +103,15 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                INSERT INTO 근무시간 (날짜, 시작시간, 종료시간, 야간근무여부, 매출, 메모)
-                VALUES (@날짜, @시작시간, @종료시간, @야간근무여부, @매출, @메모)";
+                INSERT INTO WorkShifts (Date, StartTime, EndTime, IsNightShift, Revenue, Notes)
+                VALUES (@Date, @StartTime, @EndTime, @IsNightShift, @Revenue, @Notes)";
 
-            command.Parameters.AddWithValue("@날짜", workShift.Date.ToString("yyyy-MM-dd"));
-            command.Parameters.AddWithValue("@시작시간", workShift.StartTime.ToString("HH:mm"));
-            command.Parameters.AddWithValue("@종료시간", workShift.EndTime.ToString("HH:mm"));
-            command.Parameters.AddWithValue("@야간근무여부", workShift.IsNightShift);
-            command.Parameters.AddWithValue("@매출", workShift.Revenue);
-            command.Parameters.AddWithValue("@메모", workShift.Notes ?? string.Empty);
+            command.Parameters.AddWithValue("@Date", workShift.Date.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@StartTime", workShift.StartTime.ToString("HH:mm"));
+            command.Parameters.AddWithValue("@EndTime", workShift.EndTime.ToString("HH:mm"));
+            command.Parameters.AddWithValue("@IsNightShift", workShift.IsNightShift);
+            command.Parameters.AddWithValue("@Revenue", workShift.Revenue);
+            command.Parameters.AddWithValue("@Notes", workShift.Notes ?? string.Empty);
 
             command.ExecuteNonQuery();
         }
@@ -119,18 +126,18 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                UPDATE 근무시간
-                SET 날짜 = @날짜, 시작시간 = @시작시간, 종료시간 = @종료시간,
-                    야간근무여부 = @야간근무여부, 매출 = @매출, 메모 = @메모
-                WHERE 아이디 = @아이디";
+                UPDATE WorkShifts
+                SET Date = @Date, StartTime = @StartTime, EndTime = @EndTime,
+                    IsNightShift = @IsNightShift, Revenue = @Revenue, Notes = @Notes
+                WHERE Id = @Id";
 
-            command.Parameters.AddWithValue("@아이디", workShift.Id);
-            command.Parameters.AddWithValue("@날짜", workShift.Date.ToString("yyyy-MM-dd"));
-            command.Parameters.AddWithValue("@시작시간", workShift.StartTime.ToString("HH:mm"));
-            command.Parameters.AddWithValue("@종료시간", workShift.EndTime.ToString("HH:mm"));
-            command.Parameters.AddWithValue("@야간근무여부", workShift.IsNightShift);
-            command.Parameters.AddWithValue("@매출", workShift.Revenue);
-            command.Parameters.AddWithValue("@메모", workShift.Notes ?? string.Empty);
+            command.Parameters.AddWithValue("@Id", workShift.Id);
+            command.Parameters.AddWithValue("@Date", workShift.Date.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@StartTime", workShift.StartTime.ToString("HH:mm"));
+            command.Parameters.AddWithValue("@EndTime", workShift.EndTime.ToString("HH:mm"));
+            command.Parameters.AddWithValue("@IsNightShift", workShift.IsNightShift);
+            command.Parameters.AddWithValue("@Revenue", workShift.Revenue);
+            command.Parameters.AddWithValue("@Notes", workShift.Notes ?? string.Empty);
 
             command.ExecuteNonQuery();
         }
@@ -144,8 +151,8 @@ namespace TaxiManager.Services
             connection.Open();
 
             var command = connection.CreateCommand();
-            command.CommandText = "DELETE FROM 근무시간 WHERE 아이디 = @아이디";
-            command.Parameters.AddWithValue("@아이디", id);
+            command.CommandText = "DELETE FROM WorkShifts WHERE Id = @Id";
+            command.Parameters.AddWithValue("@Id", id);
 
             command.ExecuteNonQuery();
         }
@@ -160,9 +167,9 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT SUM(매출) FROM 근무시간
-                WHERE 날짜 = @날짜";
-            command.Parameters.AddWithValue("@날짜", date.ToString("yyyy-MM-dd"));
+                SELECT SUM(Revenue) FROM WorkShifts
+                WHERE Date = @Date";
+            command.Parameters.AddWithValue("@Date", date.ToString("yyyy-MM-dd"));
 
             var result = command.ExecuteScalar();
             return result == DBNull.Value ? 0 : Convert.ToDecimal(result);
@@ -178,11 +185,11 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT SUM(총매출) FROM 일별마감
-                WHERE strftime('%Y', 날짜) = @년도
-                AND strftime('%m', 날짜) = @월";
-            command.Parameters.AddWithValue("@년도", year.ToString());
-            command.Parameters.AddWithValue("@월", month.ToString("D2"));
+                SELECT SUM(TotalRevenue) FROM DailySettlements
+                WHERE strftime('%Y', Date) = @Year
+                AND strftime('%m', Date) = @Month";
+            command.Parameters.AddWithValue("@Year", year.ToString());
+            command.Parameters.AddWithValue("@Month", month.ToString("D2"));
 
             var result = command.ExecuteScalar();
             return result == DBNull.Value ? 0 : Convert.ToDecimal(result);
@@ -198,10 +205,10 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT SUM(총매출) FROM 일별마감
-                WHERE 날짜 >= @시작날짜 AND 날짜 <= @종료날짜";
-            command.Parameters.AddWithValue("@시작날짜", startDate.ToString("yyyy-MM-dd"));
-            command.Parameters.AddWithValue("@종료날짜", endDate.ToString("yyyy-MM-dd"));
+                SELECT SUM(TotalRevenue) FROM DailySettlements
+                WHERE Date >= @StartDate AND Date <= @EndDate";
+            command.Parameters.AddWithValue("@StartDate", startDate.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@EndDate", endDate.ToString("yyyy-MM-dd"));
 
             var result = command.ExecuteScalar();
             return result == DBNull.Value ? 0 : Convert.ToDecimal(result);
@@ -217,10 +224,10 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT SUM(총근무시간) FROM 일별마감
-                WHERE 날짜 >= @시작날짜 AND 날짜 <= @종료날짜";
-            command.Parameters.AddWithValue("@시작날짜", startDate.ToString("yyyy-MM-dd"));
-            command.Parameters.AddWithValue("@종료날짜", endDate.ToString("yyyy-MM-dd"));
+                SELECT SUM(TotalWorkingHours) FROM DailySettlements
+                WHERE Date >= @StartDate AND Date <= @EndDate";
+            command.Parameters.AddWithValue("@StartDate", startDate.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@EndDate", endDate.ToString("yyyy-MM-dd"));
 
             var result = command.ExecuteScalar();
             return result == DBNull.Value ? 0 : Convert.ToDouble(result);
@@ -271,14 +278,14 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                INSERT OR REPLACE INTO 일별마감 (날짜, 마감일시, 총매출, 총근무시간, 메모)
-                VALUES (@날짜, @마감일시, @총매출, @총근무시간, @메모)";
+                INSERT OR REPLACE INTO DailySettlements (Date, SettlementDateTime, TotalRevenue, TotalWorkingHours, Notes)
+                VALUES (@Date, @SettlementDateTime, @TotalRevenue, @TotalWorkingHours, @Notes)";
 
-            command.Parameters.AddWithValue("@날짜", date.ToString("yyyy-MM-dd"));
-            command.Parameters.AddWithValue("@마감일시", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-            command.Parameters.AddWithValue("@총매출", totalRevenue);
-            command.Parameters.AddWithValue("@총근무시간", totalWorkingHours);
-            command.Parameters.AddWithValue("@메모", notes ?? string.Empty);
+            command.Parameters.AddWithValue("@Date", date.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@SettlementDateTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            command.Parameters.AddWithValue("@TotalRevenue", totalRevenue);
+            command.Parameters.AddWithValue("@TotalWorkingHours", totalWorkingHours);
+            command.Parameters.AddWithValue("@Notes", notes ?? string.Empty);
 
             command.ExecuteNonQuery();
         }
@@ -292,8 +299,8 @@ namespace TaxiManager.Services
             connection.Open();
 
             var command = connection.CreateCommand();
-            command.CommandText = "SELECT * FROM 일별마감 WHERE 날짜 = @날짜";
-            command.Parameters.AddWithValue("@날짜", date.ToString("yyyy-MM-dd"));
+            command.CommandText = "SELECT * FROM DailySettlements WHERE Date = @Date";
+            command.Parameters.AddWithValue("@Date", date.ToString("yyyy-MM-dd"));
 
             using var reader = command.ExecuteReader();
             if (reader.Read())
@@ -324,11 +331,11 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT * FROM 일별마감
-                WHERE 날짜 >= @시작날짜 AND 날짜 <= @종료날짜
-                ORDER BY 날짜 DESC";
-            command.Parameters.AddWithValue("@시작날짜", startDate.ToString("yyyy-MM-dd"));
-            command.Parameters.AddWithValue("@종료날짜", endDate.ToString("yyyy-MM-dd"));
+                SELECT * FROM DailySettlements
+                WHERE Date >= @StartDate AND Date <= @EndDate
+                ORDER BY Date DESC";
+            command.Parameters.AddWithValue("@StartDate", startDate.ToString("yyyy-MM-dd"));
+            command.Parameters.AddWithValue("@EndDate", endDate.ToString("yyyy-MM-dd"));
 
             using var reader = command.ExecuteReader();
             while (reader.Read())

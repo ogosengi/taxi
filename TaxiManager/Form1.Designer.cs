@@ -243,7 +243,7 @@ partial class Form1
         groupBoxRevenue.Controls.Add(labelMonth);
         groupBoxRevenue.Location = new Point(12, 350);
         groupBoxRevenue.Name = "groupBoxRevenue";
-        groupBoxRevenue.Size = new Size(350, 220);
+        groupBoxRevenue.Size = new Size(350, 190);
         groupBoxRevenue.TabIndex = 2;
         groupBoxRevenue.TabStop = false;
         groupBoxRevenue.Text = "매출 조회";
@@ -252,7 +252,7 @@ partial class Form1
         //
         labelMonthlyRevenue.AutoSize = true;
         labelMonthlyRevenue.Font = new Font("맑은 고딕", 9F, FontStyle.Bold);
-        labelMonthlyRevenue.Location = new Point(6, 70);
+        labelMonthlyRevenue.Location = new Point(6, 80);
         labelMonthlyRevenue.Name = "labelMonthlyRevenue";
         labelMonthlyRevenue.Size = new Size(127, 15);
         labelMonthlyRevenue.TabIndex = 3;
@@ -260,7 +260,7 @@ partial class Form1
         //
         // btnMonthlyRevenue
         //
-        btnMonthlyRevenue.Location = new Point(204, 40);
+        btnMonthlyRevenue.Location = new Point(204, 50);
         btnMonthlyRevenue.Name = "btnMonthlyRevenue";
         btnMonthlyRevenue.Size = new Size(75, 23);
         btnMonthlyRevenue.TabIndex = 2;
@@ -272,7 +272,7 @@ partial class Form1
         //
         dateTimePickerMonth.CustomFormat = "yyyy-MM";
         dateTimePickerMonth.Format = DateTimePickerFormat.Custom;
-        dateTimePickerMonth.Location = new Point(79, 40);
+        dateTimePickerMonth.Location = new Point(79, 50);
         dateTimePickerMonth.Name = "dateTimePickerMonth";
         dateTimePickerMonth.Size = new Size(119, 23);
         dateTimePickerMonth.TabIndex = 1;
@@ -280,7 +280,7 @@ partial class Form1
         // labelMonth
         //
         labelMonth.AutoSize = true;
-        labelMonth.Location = new Point(6, 46);
+        labelMonth.Location = new Point(6, 56);
         labelMonth.Name = "labelMonth";
         labelMonth.Size = new Size(35, 15);
         labelMonth.TabIndex = 0;
@@ -288,7 +288,7 @@ partial class Form1
         //
         // btnPeriodStats
         //
-        btnPeriodStats.Location = new Point(204, 130);
+        btnPeriodStats.Location = new Point(204, 150);
         btnPeriodStats.Name = "btnPeriodStats";
         btnPeriodStats.Size = new Size(75, 23);
         btnPeriodStats.TabIndex = 9;
@@ -298,7 +298,7 @@ partial class Form1
         //
         // dateTimePickerPeriodEnd
         //
-        dateTimePickerPeriodEnd.Location = new Point(79, 130);
+        dateTimePickerPeriodEnd.Location = new Point(79, 150);
         dateTimePickerPeriodEnd.Name = "dateTimePickerPeriodEnd";
         dateTimePickerPeriodEnd.Size = new Size(119, 23);
         dateTimePickerPeriodEnd.TabIndex = 8;
@@ -306,7 +306,7 @@ partial class Form1
         // labelPeriodEnd
         //
         labelPeriodEnd.AutoSize = true;
-        labelPeriodEnd.Location = new Point(6, 136);
+        labelPeriodEnd.Location = new Point(6, 156);
         labelPeriodEnd.Name = "labelPeriodEnd";
         labelPeriodEnd.Size = new Size(47, 15);
         labelPeriodEnd.TabIndex = 7;
@@ -314,7 +314,7 @@ partial class Form1
         //
         // dateTimePickerPeriodStart
         //
-        dateTimePickerPeriodStart.Location = new Point(79, 100);
+        dateTimePickerPeriodStart.Location = new Point(79, 120);
         dateTimePickerPeriodStart.Name = "dateTimePickerPeriodStart";
         dateTimePickerPeriodStart.Size = new Size(119, 23);
         dateTimePickerPeriodStart.TabIndex = 6;
@@ -322,7 +322,7 @@ partial class Form1
         // labelPeriodStart
         //
         labelPeriodStart.AutoSize = true;
-        labelPeriodStart.Location = new Point(6, 106);
+        labelPeriodStart.Location = new Point(6, 126);
         labelPeriodStart.Name = "labelPeriodStart";
         labelPeriodStart.Size = new Size(47, 15);
         labelPeriodStart.TabIndex = 5;
@@ -330,7 +330,7 @@ partial class Form1
         //
         // btnDailySettlement
         //
-        btnDailySettlement.Location = new Point(204, 30);
+        btnDailySettlement.Location = new Point(204, 20);
         btnDailySettlement.Name = "btnDailySettlement";
         btnDailySettlement.Size = new Size(75, 23);
         btnDailySettlement.TabIndex = 12;
@@ -340,7 +340,7 @@ partial class Form1
         //
         // dateTimePickerSettlement
         //
-        dateTimePickerSettlement.Location = new Point(79, 30);
+        dateTimePickerSettlement.Location = new Point(79, 20);
         dateTimePickerSettlement.Name = "dateTimePickerSettlement";
         dateTimePickerSettlement.Size = new Size(119, 23);
         dateTimePickerSettlement.TabIndex = 11;
@@ -348,7 +348,7 @@ partial class Form1
         // labelSettlement
         //
         labelSettlement.AutoSize = true;
-        labelSettlement.Location = new Point(6, 36);
+        labelSettlement.Location = new Point(6, 26);
         labelSettlement.Name = "labelSettlement";
         labelSettlement.Size = new Size(47, 15);
         labelSettlement.TabIndex = 10;
