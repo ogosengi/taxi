@@ -29,7 +29,6 @@ partial class Form1
     private void InitializeComponent()
     {
         groupBoxInput = new GroupBox();
-        checkBoxCompleted = new CheckBox();
         textBoxNotes = new TextBox();
         labelNotes = new Label();
         numericUpDownRevenue = new NumericUpDown();
@@ -55,6 +54,9 @@ partial class Form1
         labelPeriodEnd = new Label();
         dateTimePickerPeriodStart = new DateTimePicker();
         labelPeriodStart = new Label();
+        btnDailySettlement = new Button();
+        dateTimePickerSettlement = new DateTimePicker();
+        labelSettlement = new Label();
         groupBoxInput.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)numericUpDownRevenue).BeginInit();
         groupBoxList.SuspendLayout();
@@ -64,7 +66,6 @@ partial class Form1
         //
         // groupBoxInput
         //
-        groupBoxInput.Controls.Add(checkBoxCompleted);
         groupBoxInput.Controls.Add(textBoxNotes);
         groupBoxInput.Controls.Add(labelNotes);
         groupBoxInput.Controls.Add(numericUpDownRevenue);
@@ -83,16 +84,6 @@ partial class Form1
         groupBoxInput.TabIndex = 0;
         groupBoxInput.TabStop = false;
         groupBoxInput.Text = "근무 시간 입력";
-        //
-        // checkBoxCompleted
-        //
-        checkBoxCompleted.AutoSize = true;
-        checkBoxCompleted.Location = new Point(79, 238);
-        checkBoxCompleted.Name = "checkBoxCompleted";
-        checkBoxCompleted.Size = new Size(62, 19);
-        checkBoxCompleted.TabIndex = 12;
-        checkBoxCompleted.Text = "마감됨";
-        checkBoxCompleted.UseVisualStyleBackColor = true;
         //
         // textBoxNotes
         //
@@ -238,6 +229,9 @@ partial class Form1
         //
         // groupBoxRevenue
         //
+        groupBoxRevenue.Controls.Add(btnDailySettlement);
+        groupBoxRevenue.Controls.Add(dateTimePickerSettlement);
+        groupBoxRevenue.Controls.Add(labelSettlement);
         groupBoxRevenue.Controls.Add(btnPeriodStats);
         groupBoxRevenue.Controls.Add(dateTimePickerPeriodEnd);
         groupBoxRevenue.Controls.Add(labelPeriodEnd);
@@ -249,7 +243,7 @@ partial class Form1
         groupBoxRevenue.Controls.Add(labelMonth);
         groupBoxRevenue.Location = new Point(12, 350);
         groupBoxRevenue.Name = "groupBoxRevenue";
-        groupBoxRevenue.Size = new Size(350, 180);
+        groupBoxRevenue.Size = new Size(350, 220);
         groupBoxRevenue.TabIndex = 2;
         groupBoxRevenue.TabStop = false;
         groupBoxRevenue.Text = "매출 조회";
@@ -334,11 +328,37 @@ partial class Form1
         labelPeriodStart.TabIndex = 5;
         labelPeriodStart.Text = "시작일:";
         //
+        // btnDailySettlement
+        //
+        btnDailySettlement.Location = new Point(204, 30);
+        btnDailySettlement.Name = "btnDailySettlement";
+        btnDailySettlement.Size = new Size(75, 23);
+        btnDailySettlement.TabIndex = 12;
+        btnDailySettlement.Text = "일별마감";
+        btnDailySettlement.UseVisualStyleBackColor = true;
+        btnDailySettlement.Click += btnDailySettlement_Click;
+        //
+        // dateTimePickerSettlement
+        //
+        dateTimePickerSettlement.Location = new Point(79, 30);
+        dateTimePickerSettlement.Name = "dateTimePickerSettlement";
+        dateTimePickerSettlement.Size = new Size(119, 23);
+        dateTimePickerSettlement.TabIndex = 11;
+        //
+        // labelSettlement
+        //
+        labelSettlement.AutoSize = true;
+        labelSettlement.Location = new Point(6, 36);
+        labelSettlement.Name = "labelSettlement";
+        labelSettlement.Size = new Size(47, 15);
+        labelSettlement.TabIndex = 10;
+        labelSettlement.Text = "마감일:";
+        //
         // Form1
         //
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1000, 550);
+        ClientSize = new Size(1000, 590);
         Controls.Add(groupBoxRevenue);
         Controls.Add(groupBoxList);
         Controls.Add(groupBoxInput);
@@ -357,7 +377,6 @@ partial class Form1
     #endregion
 
     private GroupBox groupBoxInput;
-    private CheckBox checkBoxCompleted;
     private TextBox textBoxNotes;
     private Label labelNotes;
     private NumericUpDown numericUpDownRevenue;
@@ -383,4 +402,7 @@ partial class Form1
     private Label labelPeriodEnd;
     private DateTimePicker dateTimePickerPeriodStart;
     private Label labelPeriodStart;
+    private Button btnDailySettlement;
+    private DateTimePicker dateTimePickerSettlement;
+    private Label labelSettlement;
 }

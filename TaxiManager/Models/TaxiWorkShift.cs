@@ -14,7 +14,6 @@ namespace TaxiManager.Models
         public bool IsNightShift { get; set; } // 야간 근무 여부 (다음날까지 이어지는 경우)
         public decimal Revenue { get; set; } // 매출
         public string Notes { get; set; } = string.Empty; // 메모
-        public bool IsCompleted { get; set; } // 마감 여부
 
         /// <summary>
         /// 근무 시간대 타입을 반환 (사용자 정의 시간 지원)

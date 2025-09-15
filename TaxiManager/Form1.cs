@@ -37,8 +37,7 @@ public partial class Form1 : Form
                 EndTime = TimeOnly.FromDateTime(dateTimePickerEnd.Value),
                 IsNightShift = checkBoxNightShift.Checked,
                 Revenue = numericUpDownRevenue.Value,
-                Notes = textBoxNotes.Text,
-                IsCompleted = checkBoxCompleted.Checked,
+                Notes = textBoxNotes.Text
             };
 
             _dataService.AddWorkShift(workShift);
@@ -63,7 +62,6 @@ public partial class Form1 : Form
         checkBoxNightShift.Checked = false;
         numericUpDownRevenue.Value = 0;
         textBoxNotes.Text = "";
-        checkBoxCompleted.Checked = false;
     }
 
 
@@ -117,5 +115,59 @@ public partial class Form1 : Form
                           $"시간당 평균 매출: {stats.AverageRevenuePerHour:C}";
 
         MessageBox.Show(statsMessage, "운행 현황", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    /// <summary>
+    /// 일별 마감 처리
+    /// </summary>
+    private void btnDailySettlement_Click(object sender, EventArgs e)
+    {
+        var selectedDate = dateTimePickerSettlement.Value.Date;
+
+        try
+        {
+            // 이미 마감된 날짜인지 확인
+            if (_dataService.IsDateSettled(selectedDate))
+            {
+                var result = MessageBox.Show(
+                    $"{selectedDate:yyyy-MM-dd}는 이미 마감되었습니다.\n다시 마감하시겠습니까?",
+                    "마감 확인",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result != DialogResult.Yes)
+                    return;
+            }
+
+            // 해당 날짜의 근무 기록이 있는지 확인
+            var dailyRevenue = _dataService.GetDailyRevenue(selectedDate);
+            if (dailyRevenue == 0)
+            {
+                MessageBox.Show(
+                    $"{selectedDate:yyyy-MM-dd}에 등록된 근무 기록이 없습니다.",
+                    "마감 불가",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 일별 마감 처리
+            _dataService.CreateDailySettlement(selectedDate);
+
+            MessageBox.Show(
+                $"{selectedDate:yyyy-MM-dd} 일별 마감이 완료되었습니다.\n총 매출: {dailyRevenue:C}",
+                "마감 완료",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"일별 마감 처리 중 오류가 발생했습니다: {ex.Message}",
+                "오류",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
     }
 }

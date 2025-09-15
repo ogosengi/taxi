@@ -63,7 +63,15 @@
 7. TaxiWorkShift 모델 단순화 - BreakMinutes, ActualWorkingHours 제거
 8. 데이터베이스 자동 초기화 및 테이블 생성 기능 구현
 9. 데이터베이스 테이블 및 컬럼명을 한글로 변경
-10. 최종 빌드 및 실행 테스트 성공
+
+### 2025-09-15 (일별마감 시스템 도입)
+1. 개별 근무시간 마감 제거 - IsCompleted 필드 삭제
+2. 일별마감 테이블 생성 - 하루에 한 번만 마감 처리
+3. DailySettlement 모델 생성 - 일별 마감 정보 관리
+4. 일별마감 기능 구현 - 날짜별 총 매출 및 근무시간 계산
+5. UI에 일별마감 기능 추가 - 마감일 선택 및 처리 버튼
+6. 매출 계산 로직 변경 - 마감된 날짜만 집계
+7. 최종 빌드 및 실행 테스트 성공
 
 ## 다음 세션을 위한 정보
 - 작업 디렉토리: D:\DEV\vibe\taxi
@@ -90,6 +98,7 @@ dotnet run --project TaxiManager
 
 ## 데이터베이스 스키마
 ```sql
+-- 근무시간 테이블
 CREATE TABLE 근무시간 (
     아이디 INTEGER PRIMARY KEY AUTOINCREMENT,
     날짜 TEXT NOT NULL,
@@ -97,8 +106,17 @@ CREATE TABLE 근무시간 (
     종료시간 TEXT NOT NULL,
     야간근무여부 INTEGER NOT NULL,
     매출 REAL NOT NULL,
-    메모 TEXT,
-    마감여부 INTEGER NOT NULL
+    메모 TEXT
+);
+
+-- 일별마감 테이블
+CREATE TABLE 일별마감 (
+    아이디 INTEGER PRIMARY KEY AUTOINCREMENT,
+    날짜 TEXT NOT NULL UNIQUE,
+    마감일시 TEXT NOT NULL,
+    총매출 REAL NOT NULL,
+    총근무시간 REAL NOT NULL,
+    메모 TEXT
 );
 ```
 
