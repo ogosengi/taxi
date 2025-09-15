@@ -31,9 +31,9 @@
 - ✅ Git 초기 설정 완료 (master 브랜치)
 - ✅ 요구사항에 맞는 택시 관리 애플리케이션 구현 완료
 - ✅ 완전히 유연한 근무시간 설정 기능 구현
-- ✅ 휴식시간 관리 기능 추가
 - ✅ 운행 현황 통계 및 매출 분석 기능 구현
-- ✅ 빌드 테스트 성공 (경고 7개, 오류 0개)
+- ✅ UI 단순화 및 SQLite 데이터베이스 도입
+- ✅ 빌드 및 실행 테스트 성공 (오류 0개)
 
 ## 작업 기록
 ### 2025-09-15 (초기 설정)
@@ -51,18 +51,38 @@
 5. Form1 UI 업데이트 - 휴식시간 입력, 기간별 통계 조회
 6. 빌드 테스트 및 오류 수정 완료
 
+### 2025-09-15 (UI 단순화 및 SQLite 도입)
+1. 근무타입 드롭다운 제거 - 사용자 인터페이스 단순화
+2. 시간 입력 형식을 HH:00으로 고정 - 분은 항상 00으로 설정
+3. 휴식시간 관리 기능 제거 - 근무시간만 관리하도록 단순화
+4. JSON 파일 저장소를 SQLite 데이터베이스로 교체
+5. Microsoft.Data.Sqlite NuGet 패키지 추가
+6. TaxiDataService 완전히 재작성 - SQLite CRUD 작업 구현
+7. TaxiWorkShift 모델 단순화 - BreakMinutes, ActualWorkingHours 제거
+8. 데이터베이스 자동 초기화 및 테이블 생성 기능 구현
+9. 최종 빌드 및 실행 테스트 성공
+
 ## 다음 세션을 위한 정보
 - 작업 디렉토리: D:\DEV\vibe\taxi
 - Git 상태: master 브랜치, origin과 연결됨
 - 사용자: ogosengi
+
+## 기술 스택
+- **언어**: C#
+- **프레임워크**: .NET 8.0, Windows Forms
+- **데이터베이스**: SQLite (Microsoft.Data.Sqlite)
+- **저장소**: GitHub (https://github.com/ogosengi/taxi)
 
 ## 추천 명령어
 ```bash
 # 프로젝트 빌드
 dotnet build
 
-# 타입체크 (해당하는 경우)
-dotnet build --verbosity normal
+# 애플리케이션 실행
+dotnet run --project TaxiManager
+
+# 데이터베이스 파일 위치
+# D:\DEV\vibe\taxi\TaxiManager\bin\Debug\net8.0-windows\taxidata.db
 ```
 
 ---
