@@ -48,17 +48,55 @@ namespace TaxiManager.Services
                 )";
             command.ExecuteNonQuery();
 
-            // 일별마감 테이블 생성 (존재하지 않을 경우에만)
-            command.CommandText = @"
-                CREATE TABLE IF NOT EXISTS DailySettlements (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Date TEXT NOT NULL UNIQUE,
-                    SettlementDateTime TEXT NOT NULL,
-                    TotalRevenue REAL NOT NULL,
-                    TotalWorkingHours REAL NOT NULL,
-                    Notes TEXT
-                )";
-            command.ExecuteNonQuery();
+            // 기존 DailySettlements 테이블 확인 및 마이그레이션
+            command.CommandText = "PRAGMA table_info(DailySettlements)";
+            var reader = command.ExecuteReader();
+            var columns = new List<string>();
+            while (reader.Read())
+            {
+                columns.Add(reader.GetString(1)); // name 컬럼은 인덱스 1
+            }
+            reader.Close();
+
+            if (columns.Contains("SettlementDateTime"))
+            {
+                // 기존 테이블에 SettlementDateTime이 있으면 마이그레이션 수행
+                command.CommandText = @"
+                    CREATE TABLE DailySettlements_new (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Date TEXT NOT NULL UNIQUE,
+                        TotalRevenue REAL NOT NULL,
+                        TotalWorkingHours REAL NOT NULL,
+                        Notes TEXT
+                    )";
+                command.ExecuteNonQuery();
+
+                // 기존 데이터 복사 (SettlementDateTime 제외)
+                command.CommandText = @"
+                    INSERT INTO DailySettlements_new (Id, Date, TotalRevenue, TotalWorkingHours, Notes)
+                    SELECT Id, Date, TotalRevenue, TotalWorkingHours, Notes FROM DailySettlements";
+                command.ExecuteNonQuery();
+
+                // 기존 테이블 삭제하고 새 테이블로 이름 변경
+                command.CommandText = "DROP TABLE DailySettlements";
+                command.ExecuteNonQuery();
+
+                command.CommandText = "ALTER TABLE DailySettlements_new RENAME TO DailySettlements";
+                command.ExecuteNonQuery();
+            }
+            else
+            {
+                // 새 테이블 생성
+                command.CommandText = @"
+                    CREATE TABLE IF NOT EXISTS DailySettlements (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Date TEXT NOT NULL UNIQUE,
+                        TotalRevenue REAL NOT NULL,
+                        TotalWorkingHours REAL NOT NULL,
+                        Notes TEXT
+                    )";
+                command.ExecuteNonQuery();
+            }
 
             // 디버그: 테이블 존재 확인
             command.CommandText = "SELECT COUNT(*) FROM WorkShifts";
@@ -251,14 +289,10 @@ namespace TaxiManager.Services
         public TaxiOperationStats GetOperationStats(DateTime startDate, DateTime endDate)
         {
             var settlements = GetDailySettlements(startDate, endDate);
-            var totalShifts = GetAllWorkShifts()
-                .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date)
-                .Count();
 
             return new TaxiOperationStats
             {
-                TotalShifts = totalShifts,
-                CompletedShifts = settlements.Count,
+                TotalWorkDays = settlements.Count,
                 TotalRevenue = settlements.Sum(x => x.TotalRevenue),
                 TotalWorkingHours = settlements.Sum(x => x.TotalWorkingHours),
                 AverageRevenuePerHour = settlements.Sum(x => x.TotalWorkingHours) > 0
@@ -290,11 +324,10 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                INSERT OR REPLACE INTO DailySettlements (Date, SettlementDateTime, TotalRevenue, TotalWorkingHours, Notes)
-                VALUES (@Date, @SettlementDateTime, @TotalRevenue, @TotalWorkingHours, @Notes)";
+                INSERT OR REPLACE INTO DailySettlements (Date, TotalRevenue, TotalWorkingHours, Notes)
+                VALUES (@Date, @TotalRevenue, @TotalWorkingHours, @Notes)";
 
             command.Parameters.AddWithValue("@Date", date.ToString("yyyy-MM-dd"));
-            command.Parameters.AddWithValue("@SettlementDateTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             command.Parameters.AddWithValue("@TotalRevenue", totalRevenue);
             command.Parameters.AddWithValue("@TotalWorkingHours", totalWorkingHours);
             command.Parameters.AddWithValue("@Notes", notes ?? string.Empty);
@@ -324,11 +357,10 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                INSERT OR REPLACE INTO DailySettlements (Date, SettlementDateTime, TotalRevenue, TotalWorkingHours, Notes)
-                VALUES (@Date, @SettlementDateTime, @TotalRevenue, @TotalWorkingHours, @Notes)";
+                INSERT OR REPLACE INTO DailySettlements (Date, TotalRevenue, TotalWorkingHours, Notes)
+                VALUES (@Date, @TotalRevenue, @TotalWorkingHours, @Notes)";
 
             command.Parameters.AddWithValue("@Date", date.ToString("yyyy-MM-dd"));
-            command.Parameters.AddWithValue("@SettlementDateTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             command.Parameters.AddWithValue("@TotalRevenue", revenue);
             command.Parameters.AddWithValue("@TotalWorkingHours", totalWorkingHours);
             command.Parameters.AddWithValue("@Notes", notes ?? string.Empty);
@@ -355,10 +387,9 @@ namespace TaxiManager.Services
                 {
                     Id = reader.GetInt32(0),
                     Date = DateTime.Parse(reader.GetString(1)),
-                    SettlementDateTime = DateTime.Parse(reader.GetString(2)),
-                    TotalRevenue = reader.GetDecimal(3),
-                    TotalWorkingHours = reader.GetDouble(4),
-                    Notes = reader.IsDBNull(5) ? string.Empty : reader.GetString(5)
+                    TotalRevenue = reader.GetDecimal(2),
+                    TotalWorkingHours = reader.GetDouble(3),
+                    Notes = reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
                 };
             }
 
@@ -390,10 +421,9 @@ namespace TaxiManager.Services
                 {
                     Id = reader.GetInt32(0),
                     Date = DateTime.Parse(reader.GetString(1)),
-                    SettlementDateTime = DateTime.Parse(reader.GetString(2)),
-                    TotalRevenue = reader.GetDecimal(3),
-                    TotalWorkingHours = reader.GetDouble(4),
-                    Notes = reader.IsDBNull(5) ? string.Empty : reader.GetString(5)
+                    TotalRevenue = reader.GetDecimal(2),
+                    TotalWorkingHours = reader.GetDouble(3),
+                    Notes = reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
                 });
             }
 
@@ -428,10 +458,9 @@ namespace TaxiManager.Services
                 {
                     Id = reader.GetInt32(0),
                     Date = DateTime.Parse(reader.GetString(1)),
-                    SettlementDateTime = DateTime.Parse(reader.GetString(2)),
-                    TotalRevenue = reader.GetDecimal(3),
-                    TotalWorkingHours = reader.GetDouble(4),
-                    Notes = reader.IsDBNull(5) ? string.Empty : reader.GetString(5)
+                    TotalRevenue = reader.GetDecimal(2),
+                    TotalWorkingHours = reader.GetDouble(3),
+                    Notes = reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
                 });
             }
 
@@ -450,14 +479,13 @@ namespace TaxiManager.Services
             command.CommandText = @"
                 UPDATE DailySettlements
                 SET TotalRevenue = @TotalRevenue, TotalWorkingHours = @TotalWorkingHours,
-                    Notes = @Notes, SettlementDateTime = @SettlementDateTime
+                    Notes = @Notes
                 WHERE Id = @Id";
 
             command.Parameters.AddWithValue("@Id", settlement.Id);
             command.Parameters.AddWithValue("@TotalRevenue", settlement.TotalRevenue);
             command.Parameters.AddWithValue("@TotalWorkingHours", settlement.TotalWorkingHours);
             command.Parameters.AddWithValue("@Notes", settlement.Notes ?? string.Empty);
-            command.Parameters.AddWithValue("@SettlementDateTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             command.ExecuteNonQuery();
         }

@@ -9,7 +9,6 @@ namespace TaxiManager.Models
     {
         public int Id { get; set; }
         public DateTime Date { get; set; } // 마감 날짜
-        public DateTime SettlementDateTime { get; set; } // 마감 처리 일시
         public decimal TotalRevenue { get; set; } // 총 매출
         public double TotalWorkingHours { get; set; } // 총 근무시간
         public string Notes { get; set; } = string.Empty; // 메모

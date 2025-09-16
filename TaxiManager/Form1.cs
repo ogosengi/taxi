@@ -39,7 +39,7 @@ public partial class Form1 : Form
     /// </summary>
     private void LoadWorkShifts()
     {
-        var workShifts = _dataService.GetAllWorkShifts();
+        var workShifts = _dataService.GetAllWorkShifts().OrderBy(x => x.Date).ToList();
         dataGridView1.DataSource = workShifts;
 
         // 컬럼 헤더를 한글로 설정
@@ -84,6 +84,13 @@ public partial class Form1 : Form
 
             _dataService.AddWorkShift(workShift);
             LoadWorkShifts();
+
+            // 추가된 데이터에 커서 이동
+            ScrollToLastAddedWorkShift(workShift.Date);
+
+            // 근무시간 입력 시 해당 날짜를 마감일에 자동 대입
+            dateTimePickerSettlement.Value = selectedDate;
+
             ClearInputs();
             // 근무 시간 추가 완료 (팝업 제거)
         }
@@ -151,8 +158,7 @@ public partial class Form1 : Form
         var stats = _dataService.GetOperationStats(startDate, endDate);
 
         var statsMessage = $"기간: {startDate:yyyy-MM-dd} ~ {endDate:yyyy-MM-dd}\n" +
-                          $"총 근무 횟수: {stats.TotalShifts}회\n" +
-                          $"완료된 근무: {stats.CompletedShifts}회 ({stats.CompletionRate:F1}%)\n" +
+                          $"총 근무 일수: {stats.TotalWorkDays}일\n" +
                           $"총 매출: {stats.TotalRevenue:C}\n" +
                           $"총 근무시간: {stats.TotalWorkingHours:F1}시간\n" +
                           $"시간당 평균 매출: {stats.AverageRevenuePerHour:C}";
@@ -212,7 +218,11 @@ public partial class Form1 : Form
             // 일별 마감 처리 (매출과 함께)
             _dataService.CreateDailySettlementWithRevenue(selectedDate, dailyRevenue);
 
-            // 일별 마감 완료 (팝업 제거)
+            // 일별 마감 완료 후 마감자료 목록 새로고침
+            LoadSettlements();
+
+            // 추가된 마감자료에 커서 이동
+            ScrollToLastAddedSettlement(selectedDate);
 
             // 매출 입력 초기화
             numericUpDownRevenue.Value = 0;
@@ -233,7 +243,7 @@ public partial class Form1 : Form
     /// </summary>
     private void LoadSettlements()
     {
-        var settlements = _dataService.GetAllDailySettlements();
+        var settlements = _dataService.GetAllDailySettlements().OrderBy(x => x.Date).ToList();
         dataGridViewSettlements.DataSource = settlements;
 
         // 컬럼 헤더를 한글로 설정
@@ -241,11 +251,11 @@ public partial class Form1 : Form
         {
             dataGridViewSettlements.Columns["Id"].HeaderText = "ID";
             dataGridViewSettlements.Columns["Date"].HeaderText = "마감일";
-            dataGridViewSettlements.Columns["SettlementDateTime"].HeaderText = "마감처리일시";
             dataGridViewSettlements.Columns["TotalRevenue"].HeaderText = "총 매출";
             dataGridViewSettlements.Columns["TotalWorkingHours"].HeaderText = "총 근무시간";
             dataGridViewSettlements.Columns["Notes"].HeaderText = "메모";
             dataGridViewSettlements.Columns["AverageRevenuePerHour"].HeaderText = "시간당 평균";
+            dataGridViewSettlements.Columns["AverageRevenuePerHour"].DefaultCellStyle.Format = "F1";
 
             // 컬럼 너비를 동적으로 조정
             AdjustGridColumnWidths();
@@ -291,6 +301,45 @@ public partial class Form1 : Form
     }
 
     /// <summary>
+    /// 추가된 근무시간에 그리드 커서 이동
+    /// </summary>
+    private void ScrollToLastAddedWorkShift(DateTime targetDate)
+    {
+        for (int i = 0; i < dataGridView1.Rows.Count; i++)
+        {
+            var row = dataGridView1.Rows[i];
+            if (row.DataBoundItem is TaxiWorkShift workShift && workShift.Date.Date == targetDate.Date)
+            {
+                // 마지막으로 추가된 데이터로 이동 (날짜가 같은 것 중 마지막)
+                dataGridView1.ClearSelection();
+                row.Selected = true;
+                dataGridView1.FirstDisplayedScrollingRowIndex = i;
+                dataGridView1.CurrentCell = dataGridView1.Rows[i].Cells[0];
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 추가된 마감자료에 그리드 커서 이동
+    /// </summary>
+    private void ScrollToLastAddedSettlement(DateTime targetDate)
+    {
+        for (int i = 0; i < dataGridViewSettlements.Rows.Count; i++)
+        {
+            var row = dataGridViewSettlements.Rows[i];
+            if (row.DataBoundItem is DailySettlement settlement && settlement.Date.Date == targetDate.Date)
+            {
+                dataGridViewSettlements.ClearSelection();
+                row.Selected = true;
+                dataGridViewSettlements.FirstDisplayedScrollingRowIndex = i;
+                dataGridViewSettlements.CurrentCell = dataGridViewSettlements.Rows[i].Cells[0];
+                break;
+            }
+        }
+    }
+
+    /// <summary>
     /// 폼 크기 변경 시 그리드 크기 조정
     /// </summary>
     private void Form1_Resize(object? sender, EventArgs e)
@@ -331,7 +380,6 @@ public partial class Form1 : Form
                 var totalWidth = dataGridViewSettlements.Width - 50; // 스크롤바 여백
                 dataGridViewSettlements.Columns["Id"].Width = (int)(totalWidth * 0.05);
                 dataGridViewSettlements.Columns["Date"].Width = (int)(totalWidth * 0.12);
-                dataGridViewSettlements.Columns["SettlementDateTime"].Width = (int)(totalWidth * 0.20);
                 dataGridViewSettlements.Columns["TotalRevenue"].Width = (int)(totalWidth * 0.12);
                 dataGridViewSettlements.Columns["TotalWorkingHours"].Width = (int)(totalWidth * 0.12);
                 dataGridViewSettlements.Columns["Notes"].Width = (int)(totalWidth * 0.20);

@@ -6,14 +6,9 @@ namespace TaxiManager.Models
     public class TaxiOperationStats
     {
         /// <summary>
-        /// 총 근무 횟수
+        /// 총 근무 일수
         /// </summary>
-        public int TotalShifts { get; set; }
-
-        /// <summary>
-        /// 완료된 근무 횟수
-        /// </summary>
-        public int CompletedShifts { get; set; }
+        public int TotalWorkDays { get; set; }
 
         /// <summary>
         /// 총 매출
@@ -30,15 +25,5 @@ namespace TaxiManager.Models
         /// </summary>
         public decimal AverageRevenuePerHour { get; set; }
 
-        /// <summary>
-        /// 근무 완료율 (%)
-        /// </summary>
-        public double CompletionRate
-        {
-            get
-            {
-                return TotalShifts > 0 ? (double)CompletedShifts / TotalShifts * 100 : 0;
-            }
-        }
     }
 }

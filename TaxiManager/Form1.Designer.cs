@@ -120,7 +120,7 @@ partial class Form1
         numericUpDownRevenue.Maximum = new decimal(new int[] { 999999, 0, 0, 0 });
         numericUpDownRevenue.Name = "numericUpDownRevenue";
         numericUpDownRevenue.Size = new Size(119, 23);
-        numericUpDownRevenue.TabIndex = 9;
+        numericUpDownRevenue.TabIndex = 11;
         //
         // labelRevenue
         //
@@ -399,7 +399,7 @@ partial class Form1
         dateTimePickerSettlement.Location = new Point(79, 20);
         dateTimePickerSettlement.Name = "dateTimePickerSettlement";
         dateTimePickerSettlement.Size = new Size(119, 23);
-        dateTimePickerSettlement.TabIndex = 11;
+        dateTimePickerSettlement.TabIndex = 10;
         //
         // labelSettlement
         //
