@@ -66,7 +66,7 @@ public partial class Form1 : Form
             _dataService.AddWorkShift(workShift);
             LoadWorkShifts();
             ClearInputs();
-            MessageBox.Show("근무 시간이 추가되었습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // 근무 시간 추가 완료 (팝업 제거)
         }
         catch (Exception ex)
         {
@@ -191,11 +191,7 @@ public partial class Form1 : Form
             // 일별 마감 처리 (매출과 함께)
             _dataService.CreateDailySettlementWithRevenue(selectedDate, dailyRevenue);
 
-            MessageBox.Show(
-                $"{selectedDate:yyyy-MM-dd} 일별 마감이 완료되었습니다.\n총 매출: {dailyRevenue:C}",
-                "마감 완료",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            // 일별 마감 완료 (팝업 제거)
 
             // 매출 입력 초기화
             numericUpDownRevenue.Value = 0;
@@ -241,7 +237,7 @@ public partial class Form1 : Form
     private void btnViewSettlements_Click(object sender, EventArgs e)
     {
         LoadSettlements();
-        MessageBox.Show("일별 마감 자료를 조회했습니다.", "조회 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        // 일별 마감 자료 조회 완료 (팝업 제거)
     }
 
     /// <summary>
