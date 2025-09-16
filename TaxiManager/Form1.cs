@@ -13,7 +13,11 @@ public partial class Form1 : Form
         InitializeComponent();
         _dataService = new TaxiDataService();
         LoadWorkShifts();
+        LoadSettlements();
         ClearInputs();
+
+        // 폼 크기 변경 이벤트 핸들러 등록
+        this.Resize += Form1_Resize;
     }
 
     /// <summary>
@@ -37,16 +41,8 @@ public partial class Form1 : Form
             dataGridView1.Columns["ShiftType"].HeaderText = "근무타입";
             dataGridView1.Columns["WorkingHours"].HeaderText = "근무시간";
 
-            // 컬럼 너비 조정
-            dataGridView1.Columns["Id"].Width = 50;
-            dataGridView1.Columns["Date"].Width = 100;
-            dataGridView1.Columns["StartTime"].Width = 80;
-            dataGridView1.Columns["EndTime"].Width = 80;
-            dataGridView1.Columns["IsNightShift"].Width = 80;
-            dataGridView1.Columns["Revenue"].Width = 100;
-            dataGridView1.Columns["Notes"].Width = 150;
-            dataGridView1.Columns["ShiftType"].Width = 150;
-            dataGridView1.Columns["WorkingHours"].Width = 100;
+            // 컬럼 너비를 동적으로 조정
+            AdjustGridColumnWidths();
         }
     }
 
@@ -212,6 +208,122 @@ public partial class Form1 : Form
                 "오류",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
+        }
+    }
+
+    /// <summary>
+    /// 일별 마감 목록을 로드
+    /// </summary>
+    private void LoadSettlements()
+    {
+        var settlements = _dataService.GetAllDailySettlements();
+        dataGridViewSettlements.DataSource = settlements;
+
+        // 컬럼 헤더를 한글로 설정
+        if (dataGridViewSettlements.Columns.Count > 0)
+        {
+            dataGridViewSettlements.Columns["Id"].HeaderText = "ID";
+            dataGridViewSettlements.Columns["Date"].HeaderText = "마감일";
+            dataGridViewSettlements.Columns["SettlementDateTime"].HeaderText = "마감처리일시";
+            dataGridViewSettlements.Columns["TotalRevenue"].HeaderText = "총 매출";
+            dataGridViewSettlements.Columns["TotalWorkingHours"].HeaderText = "총 근무시간";
+            dataGridViewSettlements.Columns["Notes"].HeaderText = "메모";
+            dataGridViewSettlements.Columns["AverageRevenuePerHour"].HeaderText = "시간당 평균";
+
+            // 컬럼 너비를 동적으로 조정
+            AdjustGridColumnWidths();
+        }
+    }
+
+    /// <summary>
+    /// 일별 마감 자료 조회 버튼 클릭
+    /// </summary>
+    private void btnViewSettlements_Click(object sender, EventArgs e)
+    {
+        LoadSettlements();
+        MessageBox.Show("일별 마감 자료를 조회했습니다.", "조회 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    /// <summary>
+    /// 선택된 일별 마감 자료 삭제
+    /// </summary>
+    private void btnDeleteSettlement_Click(object sender, EventArgs e)
+    {
+        if (dataGridViewSettlements.SelectedRows.Count > 0)
+        {
+            var selectedSettlement = dataGridViewSettlements.SelectedRows[0].DataBoundItem as DailySettlement;
+            if (selectedSettlement != null && MessageBox.Show($"{selectedSettlement.Date:yyyy-MM-dd} 마감 자료를 삭제하시겠습니까?",
+                "삭제 확인", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                try
+                {
+                    _dataService.DeleteDailySettlement(selectedSettlement.Id);
+                    LoadSettlements();
+                    MessageBox.Show("마감 자료가 삭제되었습니다.", "삭제 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+        else
+        {
+            MessageBox.Show("삭제할 마감 자료를 선택해주세요.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+    }
+
+    /// <summary>
+    /// 폼 크기 변경 시 그리드 크기 조정
+    /// </summary>
+    private void Form1_Resize(object? sender, EventArgs e)
+    {
+        // 폼이 최소화되었을 때는 처리하지 않음
+        if (this.WindowState == FormWindowState.Minimized)
+            return;
+
+        // 그리드 컬럼 너비를 다시 조정
+        AdjustGridColumnWidths();
+    }
+
+    /// <summary>
+    /// 그리드 컬럼 너비를 화면 크기에 맞게 조정
+    /// </summary>
+    private void AdjustGridColumnWidths()
+    {
+        try
+        {
+            // 근무 시간 목록 그리드 컬럼 너비 조정
+            if (dataGridView1.Columns.Count > 0)
+            {
+                var totalWidth = dataGridView1.Width - 50; // 스크롤바 여백
+                dataGridView1.Columns["Id"].Width = (int)(totalWidth * 0.05);
+                dataGridView1.Columns["Date"].Width = (int)(totalWidth * 0.12);
+                dataGridView1.Columns["StartTime"].Width = (int)(totalWidth * 0.10);
+                dataGridView1.Columns["EndTime"].Width = (int)(totalWidth * 0.10);
+                dataGridView1.Columns["IsNightShift"].Width = (int)(totalWidth * 0.08);
+                dataGridView1.Columns["Revenue"].Width = (int)(totalWidth * 0.12);
+                dataGridView1.Columns["Notes"].Width = (int)(totalWidth * 0.20);
+                dataGridView1.Columns["ShiftType"].Width = (int)(totalWidth * 0.15);
+                dataGridView1.Columns["WorkingHours"].Width = (int)(totalWidth * 0.08);
+            }
+
+            // 마감 자료 그리드 컬럼 너비 조정
+            if (dataGridViewSettlements.Columns.Count > 0)
+            {
+                var totalWidth = dataGridViewSettlements.Width - 50; // 스크롤바 여백
+                dataGridViewSettlements.Columns["Id"].Width = (int)(totalWidth * 0.05);
+                dataGridViewSettlements.Columns["Date"].Width = (int)(totalWidth * 0.12);
+                dataGridViewSettlements.Columns["SettlementDateTime"].Width = (int)(totalWidth * 0.20);
+                dataGridViewSettlements.Columns["TotalRevenue"].Width = (int)(totalWidth * 0.12);
+                dataGridViewSettlements.Columns["TotalWorkingHours"].Width = (int)(totalWidth * 0.12);
+                dataGridViewSettlements.Columns["Notes"].Width = (int)(totalWidth * 0.20);
+                dataGridViewSettlements.Columns["AverageRevenuePerHour"].Width = (int)(totalWidth * 0.15);
+            }
+        }
+        catch (Exception)
+        {
+            // 컬럼이 아직 생성되지 않았거나 오류가 발생한 경우 무시
         }
     }
 }

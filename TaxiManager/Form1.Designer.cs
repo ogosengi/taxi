@@ -57,11 +57,17 @@ partial class Form1
         btnDailySettlement = new Button();
         dateTimePickerSettlement = new DateTimePicker();
         labelSettlement = new Label();
+        groupBoxSettlements = new GroupBox();
+        dataGridViewSettlements = new DataGridView();
+        btnDeleteSettlement = new Button();
+        btnViewSettlements = new Button();
         groupBoxInput.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)numericUpDownRevenue).BeginInit();
         groupBoxList.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
         groupBoxRevenue.SuspendLayout();
+        groupBoxSettlements.SuspendLayout();
+        ((System.ComponentModel.ISupportInitialize)dataGridViewSettlements).BeginInit();
         SuspendLayout();
         //
         // groupBoxInput
@@ -197,20 +203,22 @@ partial class Form1
         groupBoxList.Controls.Add(dataGridView1);
         groupBoxList.Location = new Point(380, 12);
         groupBoxList.Name = "groupBoxList";
-        groupBoxList.Size = new Size(600, 400);
+        groupBoxList.Size = new Size(600, 280);
         groupBoxList.TabIndex = 1;
         groupBoxList.TabStop = false;
         groupBoxList.Text = "근무 시간 목록";
+        groupBoxList.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         //
         // btnDeleteShift
         //
-        btnDeleteShift.Location = new Point(519, 371);
+        btnDeleteShift.Location = new Point(519, 251);
         btnDeleteShift.Name = "btnDeleteShift";
         btnDeleteShift.Size = new Size(75, 23);
         btnDeleteShift.TabIndex = 1;
         btnDeleteShift.Text = "삭제";
         btnDeleteShift.UseVisualStyleBackColor = true;
         btnDeleteShift.Click += btnDeleteShift_Click;
+        btnDeleteShift.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
         //
         // dataGridView1
         //
@@ -222,8 +230,9 @@ partial class Form1
         dataGridView1.Name = "dataGridView1";
         dataGridView1.ReadOnly = true;
         dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        dataGridView1.Size = new Size(588, 343);
+        dataGridView1.Size = new Size(588, 220);
         dataGridView1.TabIndex = 0;
+        dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         //
         // groupBoxRevenue
         //
@@ -241,7 +250,7 @@ partial class Form1
         groupBoxRevenue.Controls.Add(btnMonthlyRevenue);
         groupBoxRevenue.Controls.Add(dateTimePickerMonth);
         groupBoxRevenue.Controls.Add(labelMonth);
-        groupBoxRevenue.Location = new Point(12, 260);
+        groupBoxRevenue.Location = new Point(12, 298);
         groupBoxRevenue.Name = "groupBoxRevenue";
         groupBoxRevenue.Size = new Size(350, 190);
         groupBoxRevenue.TabIndex = 2;
@@ -354,11 +363,59 @@ partial class Form1
         labelSettlement.TabIndex = 10;
         labelSettlement.Text = "마감일:";
         //
+        // groupBoxSettlements
+        //
+        groupBoxSettlements.Controls.Add(btnDeleteSettlement);
+        groupBoxSettlements.Controls.Add(btnViewSettlements);
+        groupBoxSettlements.Controls.Add(dataGridViewSettlements);
+        groupBoxSettlements.Location = new Point(380, 298);
+        groupBoxSettlements.Name = "groupBoxSettlements";
+        groupBoxSettlements.Size = new Size(600, 190);
+        groupBoxSettlements.TabIndex = 3;
+        groupBoxSettlements.TabStop = false;
+        groupBoxSettlements.Text = "일별 마감 자료 관리";
+        groupBoxSettlements.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        //
+        // dataGridViewSettlements
+        //
+        dataGridViewSettlements.AllowUserToAddRows = false;
+        dataGridViewSettlements.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+        dataGridViewSettlements.Location = new Point(6, 50);
+        dataGridViewSettlements.Name = "dataGridViewSettlements";
+        dataGridViewSettlements.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        dataGridViewSettlements.Size = new Size(588, 130);
+        dataGridViewSettlements.TabIndex = 0;
+        dataGridViewSettlements.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        //
+        // btnDeleteSettlement
+        //
+        btnDeleteSettlement.Location = new Point(519, 21);
+        btnDeleteSettlement.Name = "btnDeleteSettlement";
+        btnDeleteSettlement.Size = new Size(75, 23);
+        btnDeleteSettlement.TabIndex = 2;
+        btnDeleteSettlement.Text = "삭제";
+        btnDeleteSettlement.UseVisualStyleBackColor = true;
+        btnDeleteSettlement.Click += btnDeleteSettlement_Click;
+        btnDeleteSettlement.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        //
+        // btnViewSettlements
+        //
+        btnViewSettlements.Location = new Point(438, 21);
+        btnViewSettlements.Name = "btnViewSettlements";
+        btnViewSettlements.Size = new Size(75, 23);
+        btnViewSettlements.TabIndex = 1;
+        btnViewSettlements.Text = "조회";
+        btnViewSettlements.UseVisualStyleBackColor = true;
+        btnViewSettlements.Click += btnViewSettlements_Click;
+        btnViewSettlements.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        //
         // Form1
         //
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1000, 590);
+        ClientSize = new Size(1000, 500);
+        MinimumSize = new Size(1000, 500);
+        Controls.Add(groupBoxSettlements);
         Controls.Add(groupBoxRevenue);
         Controls.Add(groupBoxList);
         Controls.Add(groupBoxInput);
@@ -371,6 +428,8 @@ partial class Form1
         ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
         groupBoxRevenue.ResumeLayout(false);
         groupBoxRevenue.PerformLayout();
+        groupBoxSettlements.ResumeLayout(false);
+        ((System.ComponentModel.ISupportInitialize)dataGridViewSettlements).EndInit();
         ResumeLayout(false);
     }
 
@@ -405,4 +464,8 @@ partial class Form1
     private Button btnDailySettlement;
     private DateTimePicker dateTimePickerSettlement;
     private Label labelSettlement;
+    private GroupBox groupBoxSettlements;
+    private DataGridView dataGridViewSettlements;
+    private Button btnDeleteSettlement;
+    private Button btnViewSettlements;
 }

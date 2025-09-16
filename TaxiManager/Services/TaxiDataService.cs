@@ -18,27 +18,26 @@ namespace TaxiManager.Services
         {
             var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "taxidata.db");
             _connectionString = $"Data Source={dbPath}";
+
+            // 디버그: 데이터베이스 경로 출력
+            System.Diagnostics.Debug.WriteLine($"Database path: {dbPath}");
+
             InitializeDatabase();
         }
 
         /// <summary>
-        /// 데이터베이스 초기화
+        /// 데이터베이스 초기화 (테이블이 없을 때만 생성)
         /// </summary>
         private void InitializeDatabase()
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            // 기존 테이블이 있으면 삭제하고 새로 생성
             var command = connection.CreateCommand();
-            command.CommandText = "DROP TABLE IF EXISTS WorkShifts";
-            command.ExecuteNonQuery();
 
-            command.CommandText = "DROP TABLE IF EXISTS DailySettlements";
-            command.ExecuteNonQuery();
-
+            // 근무시간 테이블 생성 (존재하지 않을 경우에만)
             command.CommandText = @"
-                CREATE TABLE WorkShifts (
+                CREATE TABLE IF NOT EXISTS WorkShifts (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Date TEXT NOT NULL,
                     StartTime TEXT NOT NULL,
@@ -49,9 +48,9 @@ namespace TaxiManager.Services
                 )";
             command.ExecuteNonQuery();
 
-            // 일별마감 테이블 생성
+            // 일별마감 테이블 생성 (존재하지 않을 경우에만)
             command.CommandText = @"
-                CREATE TABLE DailySettlements (
+                CREATE TABLE IF NOT EXISTS DailySettlements (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Date TEXT NOT NULL UNIQUE,
                     SettlementDateTime TEXT NOT NULL,
@@ -60,6 +59,15 @@ namespace TaxiManager.Services
                     Notes TEXT
                 )";
             command.ExecuteNonQuery();
+
+            // 디버그: 테이블 존재 확인
+            command.CommandText = "SELECT COUNT(*) FROM WorkShifts";
+            var workShiftCount = command.ExecuteScalar();
+            System.Diagnostics.Debug.WriteLine($"WorkShifts table record count: {workShiftCount}");
+
+            command.CommandText = "SELECT COUNT(*) FROM DailySettlements";
+            var settlementCount = command.ExecuteScalar();
+            System.Diagnostics.Debug.WriteLine($"DailySettlements table record count: {settlementCount}");
         }
 
         /// <summary>
@@ -113,7 +121,11 @@ namespace TaxiManager.Services
             command.Parameters.AddWithValue("@Revenue", workShift.Revenue);
             command.Parameters.AddWithValue("@Notes", workShift.Notes ?? string.Empty);
 
-            command.ExecuteNonQuery();
+            // 디버그: 추가하려는 데이터 출력
+            System.Diagnostics.Debug.WriteLine($"Adding WorkShift: {workShift.Date:yyyy-MM-dd} {workShift.StartTime}-{workShift.EndTime}, Revenue: {workShift.Revenue}");
+
+            var rowsAffected = command.ExecuteNonQuery();
+            System.Diagnostics.Debug.WriteLine($"Rows affected: {rowsAffected}");
         }
 
         /// <summary>
@@ -394,6 +406,75 @@ namespace TaxiManager.Services
         public bool IsDateSettled(DateTime date)
         {
             return GetDailySettlement(date) != null;
+        }
+
+        /// <summary>
+        /// 모든 일별 마감 정보를 반환
+        /// </summary>
+        public List<DailySettlement> GetAllDailySettlements()
+        {
+            var settlements = new List<DailySettlement>();
+
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = "SELECT * FROM DailySettlements ORDER BY Date DESC";
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                settlements.Add(new DailySettlement
+                {
+                    Id = reader.GetInt32(0),
+                    Date = DateTime.Parse(reader.GetString(1)),
+                    SettlementDateTime = DateTime.Parse(reader.GetString(2)),
+                    TotalRevenue = reader.GetDecimal(3),
+                    TotalWorkingHours = reader.GetDouble(4),
+                    Notes = reader.IsDBNull(5) ? string.Empty : reader.GetString(5)
+                });
+            }
+
+            return settlements;
+        }
+
+        /// <summary>
+        /// 일별 마감 정보를 업데이트
+        /// </summary>
+        public void UpdateDailySettlement(DailySettlement settlement)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                UPDATE DailySettlements
+                SET TotalRevenue = @TotalRevenue, TotalWorkingHours = @TotalWorkingHours,
+                    Notes = @Notes, SettlementDateTime = @SettlementDateTime
+                WHERE Id = @Id";
+
+            command.Parameters.AddWithValue("@Id", settlement.Id);
+            command.Parameters.AddWithValue("@TotalRevenue", settlement.TotalRevenue);
+            command.Parameters.AddWithValue("@TotalWorkingHours", settlement.TotalWorkingHours);
+            command.Parameters.AddWithValue("@Notes", settlement.Notes ?? string.Empty);
+            command.Parameters.AddWithValue("@SettlementDateTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            command.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// 일별 마감 정보를 삭제
+        /// </summary>
+        public void DeleteDailySettlement(int id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = "DELETE FROM DailySettlements WHERE Id = @Id";
+            command.Parameters.AddWithValue("@Id", id);
+
+            command.ExecuteNonQuery();
         }
     }
 }
