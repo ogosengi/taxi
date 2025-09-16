@@ -38,8 +38,12 @@ partial class Form1
         labelEndTime = new Label();
         dateTimePickerStart = new DateTimePicker();
         labelStartTime = new Label();
-        dateTimePicker1 = new DateTimePicker();
-        labelDate = new Label();
+        comboBoxYear = new ComboBox();
+        numericUpDownMonth = new NumericUpDown();
+        numericUpDownDay = new NumericUpDown();
+        labelYear = new Label();
+        labelMonth = new Label();
+        labelDay = new Label();
         btnAddShift = new Button();
         groupBoxList = new GroupBox();
         btnDeleteShift = new Button();
@@ -48,7 +52,7 @@ partial class Form1
         labelMonthlyRevenue = new Label();
         btnMonthlyRevenue = new Button();
         dateTimePickerMonth = new DateTimePicker();
-        labelMonth = new Label();
+        labelMonthSelector = new Label();
         btnPeriodStats = new Button();
         dateTimePickerPeriodEnd = new DateTimePicker();
         labelPeriodEnd = new Label();
@@ -79,8 +83,12 @@ partial class Form1
         groupBoxInput.Controls.Add(labelEndTime);
         groupBoxInput.Controls.Add(dateTimePickerStart);
         groupBoxInput.Controls.Add(labelStartTime);
-        groupBoxInput.Controls.Add(dateTimePicker1);
-        groupBoxInput.Controls.Add(labelDate);
+        groupBoxInput.Controls.Add(comboBoxYear);
+        groupBoxInput.Controls.Add(numericUpDownMonth);
+        groupBoxInput.Controls.Add(numericUpDownDay);
+        groupBoxInput.Controls.Add(labelYear);
+        groupBoxInput.Controls.Add(labelMonth);
+        groupBoxInput.Controls.Add(labelDay);
         groupBoxInput.Controls.Add(btnAddShift);
         groupBoxInput.Location = new Point(12, 12);
         groupBoxInput.Name = "groupBoxInput";
@@ -93,8 +101,8 @@ partial class Form1
         //
         textBoxNotes.Location = new Point(79, 155);
         textBoxNotes.Name = "textBoxNotes";
-        textBoxNotes.Size = new Size(200, 23);
-        textBoxNotes.TabIndex = 11;
+        textBoxNotes.Size = new Size(140, 23);
+        textBoxNotes.TabIndex = 7;
         //
         // labelNotes
         //
@@ -129,7 +137,7 @@ partial class Form1
         checkBoxNightShift.Location = new Point(79, 126);
         checkBoxNightShift.Name = "checkBoxNightShift";
         checkBoxNightShift.Size = new Size(74, 19);
-        checkBoxNightShift.TabIndex = 7;
+        checkBoxNightShift.TabIndex = 6;
         checkBoxNightShift.Text = "야간 근무";
         checkBoxNightShift.UseVisualStyleBackColor = true;
         //
@@ -141,7 +149,7 @@ partial class Form1
         dateTimePickerEnd.Name = "dateTimePickerEnd";
         dateTimePickerEnd.ShowUpDown = true;
         dateTimePickerEnd.Size = new Size(200, 23);
-        dateTimePickerEnd.TabIndex = 6;
+        dateTimePickerEnd.TabIndex = 5;
         //
         // labelEndTime
         //
@@ -171,28 +179,67 @@ partial class Form1
         labelStartTime.TabIndex = 3;
         labelStartTime.Text = "시작 시간:";
         //
-        // dateTimePicker1
+        // comboBoxYear
         //
-        dateTimePicker1.Location = new Point(79, 51);
-        dateTimePicker1.Name = "dateTimePicker1";
-        dateTimePicker1.Size = new Size(200, 23);
-        dateTimePicker1.TabIndex = 2;
+        comboBoxYear.DropDownStyle = ComboBoxStyle.DropDownList;
+        comboBoxYear.Location = new Point(79, 51);
+        comboBoxYear.Name = "comboBoxYear";
+        comboBoxYear.Size = new Size(70, 23);
+        comboBoxYear.TabIndex = 1;
         //
-        // labelDate
+        // numericUpDownMonth
         //
-        labelDate.AutoSize = true;
-        labelDate.Location = new Point(6, 57);
-        labelDate.Name = "labelDate";
-        labelDate.Size = new Size(35, 15);
-        labelDate.TabIndex = 1;
-        labelDate.Text = "날짜:";
+        numericUpDownMonth.Location = new Point(179, 51);
+        numericUpDownMonth.Maximum = 12;
+        numericUpDownMonth.Minimum = 1;
+        numericUpDownMonth.Name = "numericUpDownMonth";
+        numericUpDownMonth.Size = new Size(50, 23);
+        numericUpDownMonth.TabIndex = 2;
+        numericUpDownMonth.Value = 1;
+        //
+        // numericUpDownDay
+        //
+        numericUpDownDay.Location = new Point(259, 51);
+        numericUpDownDay.Maximum = 31;
+        numericUpDownDay.Minimum = 1;
+        numericUpDownDay.Name = "numericUpDownDay";
+        numericUpDownDay.Size = new Size(50, 23);
+        numericUpDownDay.TabIndex = 3;
+        numericUpDownDay.Value = 1;
+        //
+        // labelYear
+        //
+        labelYear.AutoSize = true;
+        labelYear.Location = new Point(6, 54);
+        labelYear.Name = "labelYear";
+        labelYear.Size = new Size(31, 15);
+        labelYear.TabIndex = 1;
+        labelYear.Text = "날짜:";
+        //
+        // labelMonth
+        //
+        labelMonth.AutoSize = true;
+        labelMonth.Location = new Point(155, 54);
+        labelMonth.Name = "labelMonth";
+        labelMonth.Size = new Size(19, 15);
+        labelMonth.TabIndex = 2;
+        labelMonth.Text = "월";
+        //
+        // labelDay
+        //
+        labelDay.AutoSize = true;
+        labelDay.Location = new Point(235, 54);
+        labelDay.Name = "labelDay";
+        labelDay.Size = new Size(19, 15);
+        labelDay.TabIndex = 3;
+        labelDay.Text = "일";
         //
         // btnAddShift
         //
-        btnAddShift.Location = new Point(204, 190);
+        btnAddShift.Location = new Point(225, 155);
         btnAddShift.Name = "btnAddShift";
-        btnAddShift.Size = new Size(75, 23);
-        btnAddShift.TabIndex = 0;
+        btnAddShift.Size = new Size(84, 23);
+        btnAddShift.TabIndex = 8;
         btnAddShift.Text = "추가";
         btnAddShift.UseVisualStyleBackColor = true;
         btnAddShift.Click += btnAddShift_Click;
@@ -249,7 +296,7 @@ partial class Form1
         groupBoxRevenue.Controls.Add(labelMonthlyRevenue);
         groupBoxRevenue.Controls.Add(btnMonthlyRevenue);
         groupBoxRevenue.Controls.Add(dateTimePickerMonth);
-        groupBoxRevenue.Controls.Add(labelMonth);
+        groupBoxRevenue.Controls.Add(labelMonthSelector);
         groupBoxRevenue.Location = new Point(12, 298);
         groupBoxRevenue.Name = "groupBoxRevenue";
         groupBoxRevenue.Size = new Size(350, 190);
@@ -286,14 +333,14 @@ partial class Form1
         dateTimePickerMonth.Size = new Size(119, 23);
         dateTimePickerMonth.TabIndex = 1;
         //
-        // labelMonth
+        // labelMonthSelector
         //
-        labelMonth.AutoSize = true;
-        labelMonth.Location = new Point(6, 56);
-        labelMonth.Name = "labelMonth";
-        labelMonth.Size = new Size(35, 15);
-        labelMonth.TabIndex = 0;
-        labelMonth.Text = "월별:";
+        labelMonthSelector.AutoSize = true;
+        labelMonthSelector.Location = new Point(6, 56);
+        labelMonthSelector.Name = "labelMonthSelector";
+        labelMonthSelector.Size = new Size(35, 15);
+        labelMonthSelector.TabIndex = 0;
+        labelMonthSelector.Text = "월별:";
         //
         // btnPeriodStats
         //
@@ -445,8 +492,12 @@ partial class Form1
     private Label labelEndTime;
     private DateTimePicker dateTimePickerStart;
     private Label labelStartTime;
-    private DateTimePicker dateTimePicker1;
-    private Label labelDate;
+    private ComboBox comboBoxYear;
+    private NumericUpDown numericUpDownMonth;
+    private NumericUpDown numericUpDownDay;
+    private Label labelYear;
+    private Label labelMonth;
+    private Label labelDay;
     private Button btnAddShift;
     private GroupBox groupBoxList;
     private Button btnDeleteShift;
@@ -455,7 +506,7 @@ partial class Form1
     private Label labelMonthlyRevenue;
     private Button btnMonthlyRevenue;
     private DateTimePicker dateTimePickerMonth;
-    private Label labelMonth;
+    private Label labelMonthSelector;
     private Button btnPeriodStats;
     private DateTimePicker dateTimePickerPeriodEnd;
     private Label labelPeriodEnd;

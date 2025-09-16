@@ -12,12 +12,26 @@ public partial class Form1 : Form
     {
         InitializeComponent();
         _dataService = new TaxiDataService();
+        InitializeYearComboBox();
         LoadWorkShifts();
         LoadSettlements();
         ClearInputs();
 
         // 폼 크기 변경 이벤트 핸들러 등록
         this.Resize += Form1_Resize;
+    }
+
+    /// <summary>
+    /// 년도 콤보박스 초기화
+    /// </summary>
+    private void InitializeYearComboBox()
+    {
+        comboBoxYear.Items.Clear();
+        for (int year = DateTime.Now.Year - 5; year <= DateTime.Now.Year + 2; year++)
+        {
+            comboBoxYear.Items.Add(year);
+        }
+        comboBoxYear.SelectedItem = DateTime.Now.Year;
     }
 
     /// <summary>
@@ -53,9 +67,14 @@ public partial class Form1 : Form
     {
         try
         {
+            var selectedDate = new DateTime(
+                (int)(comboBoxYear.SelectedItem ?? DateTime.Now.Year),
+                (int)numericUpDownMonth.Value,
+                (int)numericUpDownDay.Value);
+
             var workShift = new TaxiWorkShift
             {
-                Date = dateTimePicker1.Value.Date,
+                Date = selectedDate,
                 StartTime = TimeOnly.FromDateTime(dateTimePickerStart.Value),
                 EndTime = TimeOnly.FromDateTime(dateTimePickerEnd.Value),
                 IsNightShift = checkBoxNightShift.Checked,
@@ -79,7 +98,9 @@ public partial class Form1 : Form
     /// </summary>
     private void ClearInputs()
     {
-        dateTimePicker1.Value = DateTime.Now;
+        comboBoxYear.SelectedItem = DateTime.Now.Year;
+        numericUpDownMonth.Value = DateTime.Now.Month;
+        numericUpDownDay.Value = DateTime.Now.Day;
         dateTimePickerStart.Value = DateTime.Today.AddHours(10);
         dateTimePickerEnd.Value = DateTime.Today.AddHours(15);
         checkBoxNightShift.Checked = false;
