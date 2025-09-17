@@ -178,16 +178,50 @@ public partial class Form1 : Form
                           $"총 매출: {stats.TotalRevenue:C}\n" +
                           $"총 근무시간: {stats.TotalWorkingHours:F1}시간\n" +
                           $"시간당 평균 매출: {stats.AverageRevenuePerHour:C}\n\n" +
-                          $"🎯 가장 효율적인 근무시간: {stats.MostEfficientStartTime}\n" +
-                          $"최고 시간당 매출: {stats.MostEfficientHourlyRevenue:C}";
+                          $"🎯 최고 효율성 분석:\n" +
+                          $"• 가장 효율적인 1시간: {stats.MostEfficientStartTime} ({stats.MostEfficientHourlyRevenue:C}/시간)\n" +
+                          $"• 가장 효율적인 시간대: {stats.BestRevenueTimeBlock}\n" +
+                          $"• 가장 효율적인 근무길이: {stats.BestWorkDuration}";
 
-        // 시간대별 상세 효율성 정보 추가
-        if (stats.HourlyEfficiency.Count > 0)
+        // 야간/주간 근무 비교
+        if (stats.DayNightComparison.Count > 0)
         {
-            statsMessage += "\n\n📊 시간대별 효율성:";
-            foreach (var item in stats.HourlyEfficiency.OrderByDescending(x => x.Value))
+            statsMessage += "\n\n🌙 주간/야간 근무 비교:";
+            foreach (var item in stats.DayNightComparison.OrderByDescending(x => x.Value))
             {
-                statsMessage += $"\n{item.Key}: {item.Value:C}/시간";
+                statsMessage += $"\n• {item.Key}: {item.Value:C}/시간";
+            }
+        }
+
+        // 근무시간 길이별 효율성
+        if (stats.WorkDurationEfficiency.Count > 0)
+        {
+            statsMessage += "\n\n⏰ 근무시간 길이별 효율성:";
+            foreach (var item in stats.WorkDurationEfficiency.OrderByDescending(x => x.Value))
+            {
+                statsMessage += $"\n• {item.Key}: {item.Value:C}/시간";
+            }
+        }
+
+        // 요일별 효율성 (상위 3개만 표시)
+        if (stats.DayOfWeekEfficiency.Count > 0)
+        {
+            statsMessage += "\n\n📅 요일별 효율성 (상위 3개):";
+            var topDays = stats.DayOfWeekEfficiency.OrderByDescending(x => x.Value).Take(3);
+            foreach (var item in topDays)
+            {
+                statsMessage += $"\n• {item.Key}: {item.Value:C}/시간";
+            }
+        }
+
+        // 2시간 블록별 효율성 (상위 3개만 표시)
+        if (stats.TwoHourBlockEfficiency.Count > 0)
+        {
+            statsMessage += "\n\n🕐 2시간 블록별 효율성 (상위 3개):";
+            var topBlocks = stats.TwoHourBlockEfficiency.OrderByDescending(x => x.Value).Take(3);
+            foreach (var item in topBlocks)
+            {
+                statsMessage += $"\n• {item.Key}: {item.Value:C}/시간";
             }
         }
 

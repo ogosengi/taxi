@@ -144,6 +144,11 @@ namespace TaxiManager.Services
             // 3. 시간대별 효율성 데이터 시트
             CreateEditableEfficiencySheet(workbook, stats);
 
+            // 3-2. 새로운 시간대별 분석 시트들
+            CreateTwoHourBlockAnalysisSheet(workbook, stats);
+            CreateWorkDurationAnalysisSheet(workbook, stats);
+            CreateDayOfWeekAnalysisSheet(workbook, stats);
+
             // 4. 통계 대시보드 시트 (수식 기반)
             CreateStatsDashboardSheet(workbook, startDate, endDate);
 
@@ -811,6 +816,270 @@ namespace TaxiManager.Services
 
             // 컬럼 너비 자동 조정
             for (int i = 0; i < headers.Length; i++)
+            {
+                worksheet.AutoSizeColumn(i);
+            }
+        }
+
+        /// <summary>
+        /// 2시간 블록 분석 시트 생성
+        /// </summary>
+        private void CreateTwoHourBlockAnalysisSheet(IWorkbook workbook, TaxiOperationStats stats)
+        {
+            var worksheet = workbook.CreateSheet("2시간블록분석");
+
+            // 제목
+            var titleRow = worksheet.CreateRow(0);
+            var titleCell = titleRow.CreateCell(0);
+            titleCell.SetCellValue("2시간 블록별 수익률 분석");
+
+            var titleStyle = workbook.CreateCellStyle();
+            var titleFont = workbook.CreateFont();
+            titleFont.FontHeightInPoints = 16;
+            titleFont.IsBold = true;
+            titleStyle.SetFont(titleFont);
+            titleCell.CellStyle = titleStyle;
+
+            // 헤더
+            var headerRow = worksheet.CreateRow(2);
+            headerRow.CreateCell(0).SetCellValue("시간블록");
+            headerRow.CreateCell(1).SetCellValue("시간당수익");
+            headerRow.CreateCell(2).SetCellValue("효율성순위");
+
+            var headerStyle = workbook.CreateCellStyle();
+            headerStyle.FillForegroundColor = IndexedColors.LightBlue.Index;
+            headerStyle.FillPattern = FillPattern.SolidForeground;
+            var headerFont = workbook.CreateFont();
+            headerFont.IsBold = true;
+            headerStyle.SetFont(headerFont);
+
+            for (int i = 0; i < 3; i++)
+            {
+                headerRow.GetCell(i).CellStyle = headerStyle;
+            }
+
+            var numberStyle = CreateNumberStyle(workbook, "#,##0");
+            var goldStyle = workbook.CreateCellStyle();
+            goldStyle.FillForegroundColor = IndexedColors.Gold.Index;
+            goldStyle.FillPattern = FillPattern.SolidForeground;
+
+            // 데이터
+            var sortedBlocks = stats.TwoHourBlockEfficiency.OrderByDescending(x => x.Value).ToList();
+            for (int i = 0; i < sortedBlocks.Count; i++)
+            {
+                var row = worksheet.CreateRow(i + 3);
+                var blockCell = row.CreateCell(0);
+                var revenueCell = row.CreateCell(1);
+                var rankCell = row.CreateCell(2);
+
+                blockCell.SetCellValue(sortedBlocks[i].Key);
+                revenueCell.SetCellValue((double)sortedBlocks[i].Value);
+                revenueCell.CellStyle = numberStyle;
+                rankCell.SetCellValue(i + 1);
+
+                // 1위 강조
+                if (i == 0)
+                {
+                    blockCell.CellStyle = goldStyle;
+                    var goldNumberStyle = workbook.CreateCellStyle();
+                    goldNumberStyle.CloneStyleFrom(numberStyle);
+                    goldNumberStyle.FillForegroundColor = IndexedColors.Gold.Index;
+                    goldNumberStyle.FillPattern = FillPattern.SolidForeground;
+                    revenueCell.CellStyle = goldNumberStyle;
+                    rankCell.CellStyle = goldStyle;
+                }
+            }
+
+            // 컬럼 너비 자동 조정
+            for (int i = 0; i < 3; i++)
+            {
+                worksheet.AutoSizeColumn(i);
+            }
+        }
+
+        /// <summary>
+        /// 근무시간 길이별 분석 시트 생성
+        /// </summary>
+        private void CreateWorkDurationAnalysisSheet(IWorkbook workbook, TaxiOperationStats stats)
+        {
+            var worksheet = workbook.CreateSheet("근무길이분석");
+
+            // 제목
+            var titleRow = worksheet.CreateRow(0);
+            var titleCell = titleRow.CreateCell(0);
+            titleCell.SetCellValue("근무시간 길이별 수익률 분석");
+
+            var titleStyle = workbook.CreateCellStyle();
+            var titleFont = workbook.CreateFont();
+            titleFont.FontHeightInPoints = 16;
+            titleFont.IsBold = true;
+            titleStyle.SetFont(titleFont);
+            titleCell.CellStyle = titleStyle;
+
+            // 헤더
+            var headerRow = worksheet.CreateRow(2);
+            headerRow.CreateCell(0).SetCellValue("근무길이");
+            headerRow.CreateCell(1).SetCellValue("시간당수익");
+            headerRow.CreateCell(2).SetCellValue("효율성순위");
+
+            var headerStyle = workbook.CreateCellStyle();
+            headerStyle.FillForegroundColor = IndexedColors.LightGreen.Index;
+            headerStyle.FillPattern = FillPattern.SolidForeground;
+            var headerFont = workbook.CreateFont();
+            headerFont.IsBold = true;
+            headerStyle.SetFont(headerFont);
+
+            for (int i = 0; i < 3; i++)
+            {
+                headerRow.GetCell(i).CellStyle = headerStyle;
+            }
+
+            var numberStyle = CreateNumberStyle(workbook, "#,##0");
+
+            // 데이터 (효율성 순으로 정렬)
+            var sortedDurations = stats.WorkDurationEfficiency.OrderByDescending(x => x.Value).ToList();
+            for (int i = 0; i < sortedDurations.Count; i++)
+            {
+                var row = worksheet.CreateRow(i + 3);
+                row.CreateCell(0).SetCellValue(sortedDurations[i].Key);
+
+                var revenueCell = row.CreateCell(1);
+                revenueCell.SetCellValue((double)sortedDurations[i].Value);
+                revenueCell.CellStyle = numberStyle;
+
+                row.CreateCell(2).SetCellValue(i + 1);
+            }
+
+            // 야간/주간 비교 섹션 추가
+            var nightDayTitleRow = worksheet.CreateRow(sortedDurations.Count + 5);
+            var nightDayTitleCell = nightDayTitleRow.CreateCell(0);
+            nightDayTitleCell.SetCellValue("야간/주간 근무 비교");
+            nightDayTitleCell.CellStyle = titleStyle;
+
+            var nightDayHeaderRow = worksheet.CreateRow(sortedDurations.Count + 7);
+            nightDayHeaderRow.CreateCell(0).SetCellValue("근무유형");
+            nightDayHeaderRow.CreateCell(1).SetCellValue("시간당수익");
+            nightDayHeaderRow.GetCell(0).CellStyle = headerStyle;
+            nightDayHeaderRow.GetCell(1).CellStyle = headerStyle;
+
+            var sortedDayNight = stats.DayNightComparison.OrderByDescending(x => x.Value).ToList();
+            for (int i = 0; i < sortedDayNight.Count; i++)
+            {
+                var row = worksheet.CreateRow(sortedDurations.Count + 8 + i);
+                row.CreateCell(0).SetCellValue(sortedDayNight[i].Key);
+
+                var revenueCell = row.CreateCell(1);
+                revenueCell.SetCellValue((double)sortedDayNight[i].Value);
+                revenueCell.CellStyle = numberStyle;
+            }
+
+            // 컬럼 너비 자동 조정
+            for (int i = 0; i < 3; i++)
+            {
+                worksheet.AutoSizeColumn(i);
+            }
+        }
+
+        /// <summary>
+        /// 요일별 분석 시트 생성
+        /// </summary>
+        private void CreateDayOfWeekAnalysisSheet(IWorkbook workbook, TaxiOperationStats stats)
+        {
+            var worksheet = workbook.CreateSheet("요일별분석");
+
+            // 제목
+            var titleRow = worksheet.CreateRow(0);
+            var titleCell = titleRow.CreateCell(0);
+            titleCell.SetCellValue("요일별 수익률 분석");
+
+            var titleStyle = workbook.CreateCellStyle();
+            var titleFont = workbook.CreateFont();
+            titleFont.FontHeightInPoints = 16;
+            titleFont.IsBold = true;
+            titleStyle.SetFont(titleFont);
+            titleCell.CellStyle = titleStyle;
+
+            // 헤더
+            var headerRow = worksheet.CreateRow(2);
+            headerRow.CreateCell(0).SetCellValue("요일");
+            headerRow.CreateCell(1).SetCellValue("시간당수익");
+            headerRow.CreateCell(2).SetCellValue("효율성순위");
+
+            var headerStyle = workbook.CreateCellStyle();
+            headerStyle.FillForegroundColor = IndexedColors.Rose.Index;
+            headerStyle.FillPattern = FillPattern.SolidForeground;
+            var headerFont = workbook.CreateFont();
+            headerFont.IsBold = true;
+            headerStyle.SetFont(headerFont);
+
+            for (int i = 0; i < 3; i++)
+            {
+                headerRow.GetCell(i).CellStyle = headerStyle;
+            }
+
+            var numberStyle = CreateNumberStyle(workbook, "#,##0");
+            var weekendStyle = workbook.CreateCellStyle();
+            weekendStyle.FillForegroundColor = IndexedColors.LightYellow.Index;
+            weekendStyle.FillPattern = FillPattern.SolidForeground;
+
+            // 데이터 (효율성 순으로 정렬)
+            var sortedDays = stats.DayOfWeekEfficiency.OrderByDescending(x => x.Value).ToList();
+            for (int i = 0; i < sortedDays.Count; i++)
+            {
+                var row = worksheet.CreateRow(i + 3);
+                var dayCell = row.CreateCell(0);
+                var revenueCell = row.CreateCell(1);
+                var rankCell = row.CreateCell(2);
+
+                dayCell.SetCellValue(sortedDays[i].Key);
+                revenueCell.SetCellValue((double)sortedDays[i].Value);
+                revenueCell.CellStyle = numberStyle;
+                rankCell.SetCellValue(i + 1);
+
+                // 주말 강조
+                if (sortedDays[i].Key.Contains("토요일") || sortedDays[i].Key.Contains("일요일"))
+                {
+                    dayCell.CellStyle = weekendStyle;
+                    var weekendNumberStyle = workbook.CreateCellStyle();
+                    weekendNumberStyle.CloneStyleFrom(numberStyle);
+                    weekendNumberStyle.FillForegroundColor = IndexedColors.LightYellow.Index;
+                    weekendNumberStyle.FillPattern = FillPattern.SolidForeground;
+                    revenueCell.CellStyle = weekendNumberStyle;
+                    rankCell.CellStyle = weekendStyle;
+                }
+            }
+
+            // 4시간 블록 분석도 같은 시트에 추가
+            var blockTitleRow = worksheet.CreateRow(sortedDays.Count + 5);
+            var blockTitleCell = blockTitleRow.CreateCell(0);
+            blockTitleCell.SetCellValue("4시간 블록별 분석");
+            blockTitleCell.CellStyle = titleStyle;
+
+            var blockHeaderRow = worksheet.CreateRow(sortedDays.Count + 7);
+            blockHeaderRow.CreateCell(0).SetCellValue("시간블록");
+            blockHeaderRow.CreateCell(1).SetCellValue("시간당수익");
+            blockHeaderRow.CreateCell(2).SetCellValue("효율성순위");
+
+            for (int i = 0; i < 3; i++)
+            {
+                blockHeaderRow.GetCell(i).CellStyle = headerStyle;
+            }
+
+            var sortedFourHourBlocks = stats.FourHourBlockEfficiency.OrderByDescending(x => x.Value).ToList();
+            for (int i = 0; i < sortedFourHourBlocks.Count; i++)
+            {
+                var row = worksheet.CreateRow(sortedDays.Count + 8 + i);
+                row.CreateCell(0).SetCellValue(sortedFourHourBlocks[i].Key);
+
+                var revenueCell = row.CreateCell(1);
+                revenueCell.SetCellValue((double)sortedFourHourBlocks[i].Value);
+                revenueCell.CellStyle = numberStyle;
+
+                row.CreateCell(2).SetCellValue(i + 1);
+            }
+
+            // 컬럼 너비 자동 조정
+            for (int i = 0; i < 3; i++)
             {
                 worksheet.AutoSizeColumn(i);
             }

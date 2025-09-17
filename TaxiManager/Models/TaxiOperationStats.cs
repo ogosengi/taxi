@@ -40,5 +40,40 @@ namespace TaxiManager.Models
         /// </summary>
         public Dictionary<string, decimal> HourlyEfficiency { get; set; } = new Dictionary<string, decimal>();
 
+        /// <summary>
+        /// 2시간 블록별 수익률 분석
+        /// </summary>
+        public Dictionary<string, decimal> TwoHourBlockEfficiency { get; set; } = new Dictionary<string, decimal>();
+
+        /// <summary>
+        /// 4시간 블록별 수익률 분석
+        /// </summary>
+        public Dictionary<string, decimal> FourHourBlockEfficiency { get; set; } = new Dictionary<string, decimal>();
+
+        /// <summary>
+        /// 근무시간 길이별 효율성 (짧은/중간/긴 근무)
+        /// </summary>
+        public Dictionary<string, decimal> WorkDurationEfficiency { get; set; } = new Dictionary<string, decimal>();
+
+        /// <summary>
+        /// 야간/주간 근무 비교 분석
+        /// </summary>
+        public Dictionary<string, decimal> DayNightComparison { get; set; } = new Dictionary<string, decimal>();
+
+        /// <summary>
+        /// 요일별 수익률 분석
+        /// </summary>
+        public Dictionary<string, decimal> DayOfWeekEfficiency { get; set; } = new Dictionary<string, decimal>();
+
+        /// <summary>
+        /// 최고 수익률 시간대 정보
+        /// </summary>
+        public string BestRevenueTimeBlock { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 최고 수익률 근무 길이
+        /// </summary>
+        public string BestWorkDuration { get; set; } = string.Empty;
+
     }
 }

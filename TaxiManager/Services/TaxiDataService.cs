@@ -309,10 +309,25 @@ namespace TaxiManager.Services
         {
             var settlements = GetDailySettlements(startDate, endDate);
             var hourlyEfficiency = CalculateHourlyEfficiency(startDate, endDate);
+            var twoHourBlockEfficiency = CalculateTwoHourBlockEfficiency(startDate, endDate);
+            var fourHourBlockEfficiency = CalculateFourHourBlockEfficiency(startDate, endDate);
+            var workDurationEfficiency = CalculateWorkDurationEfficiency(startDate, endDate);
+            var dayNightComparison = CalculateDayNightComparison(startDate, endDate);
+            var dayOfWeekEfficiency = CalculateDayOfWeekEfficiency(startDate, endDate);
 
             var mostEfficientTime = hourlyEfficiency.Count > 0
                 ? hourlyEfficiency.OrderByDescending(x => x.Value).First()
                 : new KeyValuePair<string, decimal>("정보없음", 0);
+
+            // 최고 수익률 시간대 블록 찾기
+            var bestTimeBlock = twoHourBlockEfficiency.Count > 0
+                ? twoHourBlockEfficiency.OrderByDescending(x => x.Value).First().Key
+                : "정보없음";
+
+            // 최고 수익률 근무 길이 찾기
+            var bestWorkDuration = workDurationEfficiency.Count > 0
+                ? workDurationEfficiency.OrderByDescending(x => x.Value).First().Key
+                : "정보없음";
 
             var stats = new TaxiOperationStats
             {
@@ -324,7 +339,14 @@ namespace TaxiManager.Services
                     : 0,
                 MostEfficientStartTime = mostEfficientTime.Key,
                 MostEfficientHourlyRevenue = mostEfficientTime.Value,
-                HourlyEfficiency = hourlyEfficiency
+                HourlyEfficiency = hourlyEfficiency,
+                TwoHourBlockEfficiency = twoHourBlockEfficiency,
+                FourHourBlockEfficiency = fourHourBlockEfficiency,
+                WorkDurationEfficiency = workDurationEfficiency,
+                DayNightComparison = dayNightComparison,
+                DayOfWeekEfficiency = dayOfWeekEfficiency,
+                BestRevenueTimeBlock = bestTimeBlock,
+                BestWorkDuration = bestWorkDuration
             };
 
             return stats;
@@ -385,6 +407,296 @@ namespace TaxiManager.Services
             }
 
             return efficiency.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+        }
+
+        /// <summary>
+        /// 2시간 블록별 수익률 분석
+        /// </summary>
+        private Dictionary<string, decimal> CalculateTwoHourBlockEfficiency(DateTime startDate, DateTime endDate)
+        {
+            var allWorkShifts = GetAllWorkShifts()
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .ToList();
+
+            var settlements = GetAllDailySettlements()
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .ToList();
+
+            var blockData = new Dictionary<string, (decimal totalRevenue, double totalHours)>();
+
+            foreach (var workShift in allWorkShifts)
+            {
+                var settlement = settlements.FirstOrDefault(s => s.Date.Date == workShift.Date.Date);
+                if (settlement == null || settlement.TotalWorkingHours == 0) continue;
+
+                var dailyTotalHours = allWorkShifts
+                    .Where(ws => ws.Date.Date == workShift.Date.Date)
+                    .Sum(ws => ws.WorkingHours);
+
+                if (dailyTotalHours == 0) continue;
+
+                var revenueRatio = workShift.WorkingHours / dailyTotalHours;
+                var allocatedRevenue = settlement.TotalRevenue * (decimal)revenueRatio;
+
+                // 2시간 블록 결정
+                var startHour = workShift.StartTime.Hour;
+                var blockStart = (startHour / 2) * 2;
+                var blockKey = $"{blockStart:D2}-{(blockStart + 2):D2}시";
+
+                if (!blockData.ContainsKey(blockKey))
+                {
+                    blockData[blockKey] = (0, 0);
+                }
+
+                blockData[blockKey] = (
+                    blockData[blockKey].totalRevenue + allocatedRevenue,
+                    blockData[blockKey].totalHours + workShift.WorkingHours
+                );
+            }
+
+            var efficiency = new Dictionary<string, decimal>();
+            foreach (var item in blockData)
+            {
+                if (item.Value.totalHours > 0)
+                {
+                    efficiency[item.Key] = item.Value.totalRevenue / (decimal)item.Value.totalHours;
+                }
+            }
+
+            return efficiency.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+        }
+
+        /// <summary>
+        /// 4시간 블록별 수익률 분석
+        /// </summary>
+        private Dictionary<string, decimal> CalculateFourHourBlockEfficiency(DateTime startDate, DateTime endDate)
+        {
+            var allWorkShifts = GetAllWorkShifts()
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .ToList();
+
+            var settlements = GetAllDailySettlements()
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .ToList();
+
+            var blockData = new Dictionary<string, (decimal totalRevenue, double totalHours)>();
+
+            foreach (var workShift in allWorkShifts)
+            {
+                var settlement = settlements.FirstOrDefault(s => s.Date.Date == workShift.Date.Date);
+                if (settlement == null || settlement.TotalWorkingHours == 0) continue;
+
+                var dailyTotalHours = allWorkShifts
+                    .Where(ws => ws.Date.Date == workShift.Date.Date)
+                    .Sum(ws => ws.WorkingHours);
+
+                if (dailyTotalHours == 0) continue;
+
+                var revenueRatio = workShift.WorkingHours / dailyTotalHours;
+                var allocatedRevenue = settlement.TotalRevenue * (decimal)revenueRatio;
+
+                // 4시간 블록 결정
+                var startHour = workShift.StartTime.Hour;
+                var blockStart = (startHour / 4) * 4;
+                var blockEnd = blockStart + 4;
+                var blockKey = $"{blockStart:D2}-{blockEnd:D2}시";
+
+                if (!blockData.ContainsKey(blockKey))
+                {
+                    blockData[blockKey] = (0, 0);
+                }
+
+                blockData[blockKey] = (
+                    blockData[blockKey].totalRevenue + allocatedRevenue,
+                    blockData[blockKey].totalHours + workShift.WorkingHours
+                );
+            }
+
+            var efficiency = new Dictionary<string, decimal>();
+            foreach (var item in blockData)
+            {
+                if (item.Value.totalHours > 0)
+                {
+                    efficiency[item.Key] = item.Value.totalRevenue / (decimal)item.Value.totalHours;
+                }
+            }
+
+            return efficiency.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+        }
+
+        /// <summary>
+        /// 근무시간 길이별 효율성 분석
+        /// </summary>
+        private Dictionary<string, decimal> CalculateWorkDurationEfficiency(DateTime startDate, DateTime endDate)
+        {
+            var allWorkShifts = GetAllWorkShifts()
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .ToList();
+
+            var settlements = GetAllDailySettlements()
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .ToList();
+
+            var durationData = new Dictionary<string, (decimal totalRevenue, double totalHours)>();
+
+            foreach (var workShift in allWorkShifts)
+            {
+                var settlement = settlements.FirstOrDefault(s => s.Date.Date == workShift.Date.Date);
+                if (settlement == null || settlement.TotalWorkingHours == 0) continue;
+
+                var dailyTotalHours = allWorkShifts
+                    .Where(ws => ws.Date.Date == workShift.Date.Date)
+                    .Sum(ws => ws.WorkingHours);
+
+                if (dailyTotalHours == 0) continue;
+
+                var revenueRatio = workShift.WorkingHours / dailyTotalHours;
+                var allocatedRevenue = settlement.TotalRevenue * (decimal)revenueRatio;
+
+                // 근무시간 길이 카테고리 결정
+                string durationCategory;
+                if (workShift.WorkingHours <= 4)
+                    durationCategory = "짧은근무 (4시간 이하)";
+                else if (workShift.WorkingHours <= 8)
+                    durationCategory = "중간근무 (4-8시간)";
+                else if (workShift.WorkingHours <= 12)
+                    durationCategory = "긴근무 (8-12시간)";
+                else
+                    durationCategory = "장시간근무 (12시간 초과)";
+
+                if (!durationData.ContainsKey(durationCategory))
+                {
+                    durationData[durationCategory] = (0, 0);
+                }
+
+                durationData[durationCategory] = (
+                    durationData[durationCategory].totalRevenue + allocatedRevenue,
+                    durationData[durationCategory].totalHours + workShift.WorkingHours
+                );
+            }
+
+            var efficiency = new Dictionary<string, decimal>();
+            foreach (var item in durationData)
+            {
+                if (item.Value.totalHours > 0)
+                {
+                    efficiency[item.Key] = item.Value.totalRevenue / (decimal)item.Value.totalHours;
+                }
+            }
+
+            return efficiency;
+        }
+
+        /// <summary>
+        /// 야간/주간 근무 비교 분석
+        /// </summary>
+        private Dictionary<string, decimal> CalculateDayNightComparison(DateTime startDate, DateTime endDate)
+        {
+            var allWorkShifts = GetAllWorkShifts()
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .ToList();
+
+            var settlements = GetAllDailySettlements()
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .ToList();
+
+            var dayNightData = new Dictionary<string, (decimal totalRevenue, double totalHours)>
+            {
+                ["주간근무"] = (0, 0),
+                ["야간근무"] = (0, 0)
+            };
+
+            foreach (var workShift in allWorkShifts)
+            {
+                var settlement = settlements.FirstOrDefault(s => s.Date.Date == workShift.Date.Date);
+                if (settlement == null || settlement.TotalWorkingHours == 0) continue;
+
+                var dailyTotalHours = allWorkShifts
+                    .Where(ws => ws.Date.Date == workShift.Date.Date)
+                    .Sum(ws => ws.WorkingHours);
+
+                if (dailyTotalHours == 0) continue;
+
+                var revenueRatio = workShift.WorkingHours / dailyTotalHours;
+                var allocatedRevenue = settlement.TotalRevenue * (decimal)revenueRatio;
+
+                var category = workShift.IsNightShift ? "야간근무" : "주간근무";
+
+                dayNightData[category] = (
+                    dayNightData[category].totalRevenue + allocatedRevenue,
+                    dayNightData[category].totalHours + workShift.WorkingHours
+                );
+            }
+
+            var efficiency = new Dictionary<string, decimal>();
+            foreach (var item in dayNightData)
+            {
+                if (item.Value.totalHours > 0)
+                {
+                    efficiency[item.Key] = item.Value.totalRevenue / (decimal)item.Value.totalHours;
+                }
+            }
+
+            return efficiency;
+        }
+
+        /// <summary>
+        /// 요일별 수익률 분석
+        /// </summary>
+        private Dictionary<string, decimal> CalculateDayOfWeekEfficiency(DateTime startDate, DateTime endDate)
+        {
+            var allWorkShifts = GetAllWorkShifts()
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .ToList();
+
+            var settlements = GetAllDailySettlements()
+                .Where(x => x.Date >= startDate && x.Date <= endDate)
+                .ToList();
+
+            var dayOfWeekData = new Dictionary<string, (decimal totalRevenue, double totalHours)>();
+
+            foreach (var workShift in allWorkShifts)
+            {
+                var settlement = settlements.FirstOrDefault(s => s.Date.Date == workShift.Date.Date);
+                if (settlement == null || settlement.TotalWorkingHours == 0) continue;
+
+                var dailyTotalHours = allWorkShifts
+                    .Where(ws => ws.Date.Date == workShift.Date.Date)
+                    .Sum(ws => ws.WorkingHours);
+
+                if (dailyTotalHours == 0) continue;
+
+                var revenueRatio = workShift.WorkingHours / dailyTotalHours;
+                var allocatedRevenue = settlement.TotalRevenue * (decimal)revenueRatio;
+
+                // 요일 이름 가져오기
+                var dayOfWeek = workShift.Date.ToString("dddd", new System.Globalization.CultureInfo("ko-KR"));
+
+                if (!dayOfWeekData.ContainsKey(dayOfWeek))
+                {
+                    dayOfWeekData[dayOfWeek] = (0, 0);
+                }
+
+                dayOfWeekData[dayOfWeek] = (
+                    dayOfWeekData[dayOfWeek].totalRevenue + allocatedRevenue,
+                    dayOfWeekData[dayOfWeek].totalHours + workShift.WorkingHours
+                );
+            }
+
+            var efficiency = new Dictionary<string, decimal>();
+            foreach (var item in dayOfWeekData)
+            {
+                if (item.Value.totalHours > 0)
+                {
+                    efficiency[item.Key] = item.Value.totalRevenue / (decimal)item.Value.totalHours;
+                }
+            }
+
+            // 요일 순서대로 정렬
+            var orderedDays = new[] { "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일" };
+            return orderedDays
+                .Where(day => efficiency.ContainsKey(day))
+                .ToDictionary(day => day, day => efficiency[day]);
         }
 
         /// <summary>
