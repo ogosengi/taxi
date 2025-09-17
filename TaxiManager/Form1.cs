@@ -7,11 +7,13 @@ namespace TaxiManager;
 public partial class Form1 : Form
 {
     private TaxiDataService _dataService;
+    private ExcelExportService _excelService;
 
     public Form1()
     {
         InitializeComponent();
         _dataService = new TaxiDataService();
+        _excelService = new ExcelExportService();
         InitializeYearComboBox();
         LoadWorkShifts();
         LoadSettlements();
@@ -479,6 +481,66 @@ public partial class Form1 : Form
         catch (Exception)
         {
             // 컬럼이 아직 생성되지 않았거나 오류가 발생한 경우 무시
+        }
+    }
+
+    /// <summary>
+    /// 엑셀로 내보내기 버튼 클릭
+    /// </summary>
+    private void btnExportExcel_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            using var saveDialog = new SaveFileDialog
+            {
+                Filter = "Excel Files|*.xlsx",
+                Title = "택시 운행 데이터를 엑셀로 저장",
+                DefaultExt = "xlsx",
+                FileName = $"택시운행데이터_{DateTime.Now:yyyyMMdd}.xlsx"
+            };
+
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                // 기간 설정 (전체 데이터)
+                var allWorkShifts = _dataService.GetAllWorkShifts();
+                var allSettlements = _dataService.GetAllDailySettlements();
+
+                if (!allWorkShifts.Any() && !allSettlements.Any())
+                {
+                    MessageBox.Show("내보낼 데이터가 없습니다.", "알림",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var startDate = allWorkShifts.Any() ? allWorkShifts.Min(x => x.Date) : DateTime.Today;
+                var endDate = allWorkShifts.Any() ? allWorkShifts.Max(x => x.Date) : DateTime.Today;
+
+                // 통계 정보 생성
+                var stats = _dataService.GetOperationStats(startDate, endDate);
+
+                // 통합 리포트로 내보내기
+                _excelService.ExportFullReportToExcel(allWorkShifts, allSettlements, stats,
+                    startDate, endDate, saveDialog.FileName);
+
+                MessageBox.Show($"엑셀 파일이 성공적으로 저장되었습니다.\n저장 위치: {saveDialog.FileName}",
+                    "엑셀 내보내기 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 저장된 파일을 열어볼지 묻기
+                if (MessageBox.Show("저장된 엑셀 파일을 열어보시겠습니까?", "파일 열기",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = saveDialog.FileName,
+                        UseShellExecute = true
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"엑셀 내보내기 중 오류가 발생했습니다: {ex.Message}",
+                "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

@@ -47,6 +47,7 @@ partial class Form1
         btnAddShift = new Button();
         groupBoxList = new GroupBox();
         btnDeleteShift = new Button();
+        btnExportExcel = new Button();
         dataGridView1 = new DataGridView();
         groupBoxRevenue = new GroupBox();
         labelMonthlyRevenue = new Label();
@@ -247,6 +248,7 @@ partial class Form1
         // groupBoxList
         //
         groupBoxList.Controls.Add(btnDeleteShift);
+        groupBoxList.Controls.Add(btnExportExcel);
         groupBoxList.Controls.Add(dataGridView1);
         groupBoxList.Location = new Point(380, 12);
         groupBoxList.Name = "groupBoxList";
@@ -266,6 +268,17 @@ partial class Form1
         btnDeleteShift.UseVisualStyleBackColor = true;
         btnDeleteShift.Click += btnDeleteShift_Click;
         btnDeleteShift.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+        //
+        // btnExportExcel
+        //
+        btnExportExcel.Location = new Point(438, 251);
+        btnExportExcel.Name = "btnExportExcel";
+        btnExportExcel.Size = new Size(75, 23);
+        btnExportExcel.TabIndex = 2;
+        btnExportExcel.Text = "엑셀내보내기";
+        btnExportExcel.UseVisualStyleBackColor = true;
+        btnExportExcel.Click += btnExportExcel_Click;
+        btnExportExcel.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
         //
         // dataGridView1
         //
@@ -501,6 +514,7 @@ partial class Form1
     private Button btnAddShift;
     private GroupBox groupBoxList;
     private Button btnDeleteShift;
+    private Button btnExportExcel;
     private DataGridView dataGridView1;
     private GroupBox groupBoxRevenue;
     private Label labelMonthlyRevenue;
