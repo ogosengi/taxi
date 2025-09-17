@@ -518,8 +518,8 @@ public partial class Form1 : Form
                 // 통계 정보 생성
                 var stats = _dataService.GetOperationStats(startDate, endDate);
 
-                // 통합 리포트로 내보내기
-                _excelService.ExportFullReportToExcel(allWorkShifts, allSettlements, stats,
+                // 엑셀 작업용 통합 리포트로 내보내기 (편집 가능한 형태)
+                _excelService.ExportWorkableReportToExcel(allWorkShifts, allSettlements, stats,
                     startDate, endDate, saveDialog.FileName);
 
                 MessageBox.Show($"엑셀 파일이 성공적으로 저장되었습니다.\n저장 위치: {saveDialog.FileName}",
