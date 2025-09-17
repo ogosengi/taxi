@@ -449,7 +449,7 @@ namespace TaxiManager.Services
             connection.Open();
 
             var command = connection.CreateCommand();
-            command.CommandText = "SELECT * FROM DailySettlements ORDER BY Date DESC";
+            command.CommandText = "SELECT * FROM DailySettlements ORDER BY Date ASC";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
