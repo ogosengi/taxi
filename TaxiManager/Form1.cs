@@ -15,10 +15,13 @@ public partial class Form1 : Form
         InitializeYearComboBox();
         LoadWorkShifts();
         LoadSettlements();
-        ClearInputs();
+        InitializeInputs();
 
         // 폼 크기 변경 이벤트 핸들러 등록
         this.Resize += Form1_Resize;
+
+        // 숫자 입력 컨트롤의 텍스트 자동 선택 이벤트 등록
+        SetupTextSelectionEvents();
     }
 
     /// <summary>
@@ -99,9 +102,19 @@ public partial class Form1 : Form
     }
 
     /// <summary>
-    /// 입력 필드를 초기화
+    /// 입력 필드를 부분 초기화 (날짜/시간은 유지, 메모만 초기화)
     /// </summary>
     private void ClearInputs()
+    {
+        // 날짜와 시간, 야간근무 체크는 유지하고 메모만 초기화
+        textBoxNotes.Text = "";
+        textBoxNotes.Focus(); // 메모 입력란에 포커스
+    }
+
+    /// <summary>
+    /// 모든 입력 필드를 완전 초기화 (최초 실행 시에만 사용)
+    /// </summary>
+    private void InitializeInputs()
     {
         comboBoxYear.SelectedItem = DateTime.Now.Year;
         numericUpDownMonth.Value = DateTime.Now.Month;
@@ -351,6 +364,42 @@ public partial class Form1 : Form
     }
 
     /// <summary>
+    /// 숫자 입력 컨트롤의 텍스트 자동 선택 이벤트 설정
+    /// </summary>
+    private void SetupTextSelectionEvents()
+    {
+        // NumericUpDown 컨트롤들의 텍스트 자동 선택 이벤트 등록
+        numericUpDownMonth.Enter += NumericUpDown_Enter;
+        numericUpDownDay.Enter += NumericUpDown_Enter;
+
+        // TextBox 컨트롤의 텍스트 자동 선택 이벤트 등록
+        textBoxNotes.Enter += TextBox_Enter;
+    }
+
+    /// <summary>
+    /// NumericUpDown 컨트롤 포커스 시 텍스트 전체 선택
+    /// </summary>
+    private void NumericUpDown_Enter(object? sender, EventArgs e)
+    {
+        if (sender is NumericUpDown numericUpDown)
+        {
+            // NumericUpDown의 텍스트박스 부분을 선택
+            numericUpDown.Select(0, numericUpDown.Text.Length);
+        }
+    }
+
+    /// <summary>
+    /// TextBox 컨트롤 포커스 시 텍스트 전체 선택
+    /// </summary>
+    private void TextBox_Enter(object? sender, EventArgs e)
+    {
+        if (sender is TextBox textBox)
+        {
+            textBox.SelectAll();
+        }
+    }
+
+    /// <summary>
     /// 그리드 컬럼 너비를 화면 크기에 맞게 조정
     /// </summary>
     private void AdjustGridColumnWidths()
@@ -362,14 +411,13 @@ public partial class Form1 : Form
             {
                 var totalWidth = dataGridView1.Width - 50; // 스크롤바 여백
                 dataGridView1.Columns["Id"].Width = (int)(totalWidth * 0.05);
-                dataGridView1.Columns["Date"].Width = (int)(totalWidth * 0.12);
-                dataGridView1.Columns["StartTime"].Width = (int)(totalWidth * 0.10);
-                dataGridView1.Columns["EndTime"].Width = (int)(totalWidth * 0.10);
-                dataGridView1.Columns["IsNightShift"].Width = (int)(totalWidth * 0.08);
-                dataGridView1.Columns["Revenue"].Width = (int)(totalWidth * 0.12);
-                dataGridView1.Columns["Notes"].Width = (int)(totalWidth * 0.20);
+                dataGridView1.Columns["Date"].Width = (int)(totalWidth * 0.14);
+                dataGridView1.Columns["StartTime"].Width = (int)(totalWidth * 0.12);
+                dataGridView1.Columns["EndTime"].Width = (int)(totalWidth * 0.12);
+                dataGridView1.Columns["IsNightShift"].Width = (int)(totalWidth * 0.10);
+                dataGridView1.Columns["Notes"].Width = (int)(totalWidth * 0.22);
                 dataGridView1.Columns["ShiftType"].Width = (int)(totalWidth * 0.15);
-                dataGridView1.Columns["WorkingHours"].Width = (int)(totalWidth * 0.08);
+                dataGridView1.Columns["WorkingHours"].Width = (int)(totalWidth * 0.10);
             }
 
             // 마감 자료 그리드 컬럼 너비 조정
