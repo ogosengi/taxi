@@ -25,5 +25,20 @@ namespace TaxiManager.Models
         /// </summary>
         public decimal AverageRevenuePerHour { get; set; }
 
+        /// <summary>
+        /// 가장 효율적인 근무 시간대 (시작 시간)
+        /// </summary>
+        public string MostEfficientStartTime { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 가장 효율적인 시간대의 시간당 평균 매출
+        /// </summary>
+        public decimal MostEfficientHourlyRevenue { get; set; }
+
+        /// <summary>
+        /// 시간대별 효율성 상세 정보
+        /// </summary>
+        public Dictionary<string, decimal> HourlyEfficiency { get; set; } = new Dictionary<string, decimal>();
+
     }
 }

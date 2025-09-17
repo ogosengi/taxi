@@ -172,9 +172,21 @@ public partial class Form1 : Form
                           $"총 근무 일수: {stats.TotalWorkDays}일\n" +
                           $"총 매출: {stats.TotalRevenue:C}\n" +
                           $"총 근무시간: {stats.TotalWorkingHours:F1}시간\n" +
-                          $"시간당 평균 매출: {stats.AverageRevenuePerHour:C}";
+                          $"시간당 평균 매출: {stats.AverageRevenuePerHour:C}\n\n" +
+                          $"🎯 가장 효율적인 근무시간: {stats.MostEfficientStartTime}\n" +
+                          $"최고 시간당 매출: {stats.MostEfficientHourlyRevenue:C}";
 
-        MessageBox.Show(statsMessage, "운행 현황", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        // 시간대별 상세 효율성 정보 추가
+        if (stats.HourlyEfficiency.Count > 0)
+        {
+            statsMessage += "\n\n📊 시간대별 효율성:";
+            foreach (var item in stats.HourlyEfficiency.OrderByDescending(x => x.Value))
+            {
+                statsMessage += $"\n{item.Key}: {item.Value:C}/시간";
+            }
+        }
+
+        MessageBox.Show(statsMessage, "운행 현황 및 효율성 분석", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     /// <summary>

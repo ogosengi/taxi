@@ -308,16 +308,83 @@ namespace TaxiManager.Services
         public TaxiOperationStats GetOperationStats(DateTime startDate, DateTime endDate)
         {
             var settlements = GetDailySettlements(startDate, endDate);
+            var hourlyEfficiency = CalculateHourlyEfficiency(startDate, endDate);
 
-            return new TaxiOperationStats
+            var mostEfficientTime = hourlyEfficiency.Count > 0
+                ? hourlyEfficiency.OrderByDescending(x => x.Value).First()
+                : new KeyValuePair<string, decimal>("정보없음", 0);
+
+            var stats = new TaxiOperationStats
             {
                 TotalWorkDays = settlements.Count,
                 TotalRevenue = settlements.Sum(x => x.TotalRevenue),
                 TotalWorkingHours = settlements.Sum(x => x.TotalWorkingHours),
                 AverageRevenuePerHour = settlements.Sum(x => x.TotalWorkingHours) > 0
                     ? settlements.Sum(x => x.TotalRevenue) / (decimal)settlements.Sum(x => x.TotalWorkingHours)
-                    : 0
+                    : 0,
+                MostEfficientStartTime = mostEfficientTime.Key,
+                MostEfficientHourlyRevenue = mostEfficientTime.Value,
+                HourlyEfficiency = hourlyEfficiency
             };
+
+            return stats;
+        }
+
+        /// <summary>
+        /// 시간대별 효율성 계산 (시작 시간 기준)
+        /// 계산식: 각 시간대별로 (총 매출 / 총 근무시간) 계산
+        /// </summary>
+        private Dictionary<string, decimal> CalculateHourlyEfficiency(DateTime startDate, DateTime endDate)
+        {
+            var hourlyData = new Dictionary<string, (decimal totalRevenue, double totalHours)>();
+
+            // 해당 기간의 모든 마감자료와 근무시간 가져오기
+            var settlements = GetDailySettlements(startDate, endDate);
+            var allWorkShifts = GetAllWorkShifts()
+                .Where(ws => ws.Date >= startDate.Date && ws.Date <= endDate.Date)
+                .ToList();
+
+            // 각 근무시간에 대해 해당 날짜의 마감 매출을 비례 배분
+            foreach (var workShift in allWorkShifts)
+            {
+                var settlement = settlements.FirstOrDefault(s => s.Date.Date == workShift.Date.Date);
+                if (settlement == null || settlement.TotalWorkingHours == 0) continue;
+
+                // 이 근무시간의 매출 비율 계산 (해당 날짜 총 근무시간 대비)
+                var dailyTotalHours = allWorkShifts
+                    .Where(ws => ws.Date.Date == workShift.Date.Date)
+                    .Sum(ws => ws.WorkingHours);
+
+                if (dailyTotalHours == 0) continue;
+
+                var revenueRatio = workShift.WorkingHours / dailyTotalHours;
+                var allocatedRevenue = settlement.TotalRevenue * (decimal)revenueRatio;
+
+                // 시작 시간대별로 집계
+                var startTimeKey = $"{workShift.StartTime:HH}시";
+
+                if (!hourlyData.ContainsKey(startTimeKey))
+                {
+                    hourlyData[startTimeKey] = (0, 0);
+                }
+
+                hourlyData[startTimeKey] = (
+                    hourlyData[startTimeKey].totalRevenue + allocatedRevenue,
+                    hourlyData[startTimeKey].totalHours + workShift.WorkingHours
+                );
+            }
+
+            // 시간당 평균 매출 계산
+            var efficiency = new Dictionary<string, decimal>();
+            foreach (var item in hourlyData)
+            {
+                if (item.Value.totalHours > 0)
+                {
+                    efficiency[item.Key] = item.Value.totalRevenue / (decimal)item.Value.totalHours;
+                }
+            }
+
+            return efficiency.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
         }
 
         /// <summary>
