@@ -43,6 +43,7 @@
 - **UX 개선**: 팝업 제거로 사용자 경험 향상
 - **데이터 공유**: GitHub을 통한 taxidata.db 공유
 - **정렬 개선**: 일별 마감자료 조회를 마감일 오름차순으로 정렬
+- **데이터 구조 개선**: 근무시간 목록에서 매출 컬럼 제거 (UI/DB 모두)
 
 ### 📊 품질 지표
 - **빌드 상태**: 경고 0개, 오류 0개 ✅
@@ -62,14 +63,13 @@ TaxiOperationStats // 운행 현황 통계
 
 ### 데이터베이스 스키마
 ```sql
--- 근무시간 테이블
+-- 근무시간 테이블 (매출 컬럼 제거됨)
 CREATE TABLE WorkShifts (
     Id INTEGER PRIMARY KEY AUTOINCREMENT,
     Date TEXT NOT NULL,
     StartTime TEXT NOT NULL,
     EndTime TEXT NOT NULL,
     IsNightShift INTEGER NOT NULL,
-    Revenue REAL NOT NULL,
     Notes TEXT
 );
 
@@ -139,6 +139,18 @@ dotnet run --project TaxiManager
   - 기존 데이터 보존하면서 스키마 변경
   - 자동 마이그레이션 로직 구현
 - **데이터 공유**: taxidata.db 파일을 GitHub에 업로드하여 온라인 공유 가능
+
+## 최신 업데이트 (2025-09-17 오후)
+### 🔧 데이터 구조 개선
+- **근무시간 테이블 최적화**:
+  - WorkShifts 테이블에서 Revenue 컬럼 완전 제거
+  - 자동 마이그레이션으로 기존 데이터 보존
+  - 근무시간과 매출을 분리하여 더 명확한 데이터 구조
+- **UI 정리**:
+  - 근무시간 목록에서 매출 컬럼 제거
+  - 매출은 일별 마감 시에만 입력하는 구조로 단순화
+- **정렬 개선**:
+  - 일별 마감자료 조회를 마감일 오름차순으로 변경
 
 ### 🛠️ 기술적 개선
 - **안정성**: 데이터베이스 스키마 변경 시 자동 마이그레이션

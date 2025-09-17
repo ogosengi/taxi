@@ -35,18 +35,57 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
 
-            // 근무시간 테이블 생성 (존재하지 않을 경우에만)
-            command.CommandText = @"
-                CREATE TABLE IF NOT EXISTS WorkShifts (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Date TEXT NOT NULL,
-                    StartTime TEXT NOT NULL,
-                    EndTime TEXT NOT NULL,
-                    IsNightShift INTEGER NOT NULL,
-                    Revenue REAL NOT NULL,
-                    Notes TEXT
-                )";
-            command.ExecuteNonQuery();
+            // WorkShifts 테이블 확인 및 Revenue 컬럼 제거 마이그레이션
+            command.CommandText = "PRAGMA table_info(WorkShifts)";
+            var workShiftsReader = command.ExecuteReader();
+            var workShiftsColumns = new List<string>();
+            while (workShiftsReader.Read())
+            {
+                workShiftsColumns.Add(workShiftsReader.GetString(1)); // name 컬럼은 인덱스 1
+            }
+            workShiftsReader.Close();
+
+            if (workShiftsColumns.Contains("Revenue"))
+            {
+                // Revenue 컬럼이 있으면 마이그레이션 수행
+                command.CommandText = @"
+                    CREATE TABLE WorkShifts_new (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Date TEXT NOT NULL,
+                        StartTime TEXT NOT NULL,
+                        EndTime TEXT NOT NULL,
+                        IsNightShift INTEGER NOT NULL,
+                        Notes TEXT
+                    )";
+                command.ExecuteNonQuery();
+
+                // 기존 데이터 복사 (Revenue 제외)
+                command.CommandText = @"
+                    INSERT INTO WorkShifts_new (Id, Date, StartTime, EndTime, IsNightShift, Notes)
+                    SELECT Id, Date, StartTime, EndTime, IsNightShift, Notes FROM WorkShifts";
+                command.ExecuteNonQuery();
+
+                // 기존 테이블 삭제하고 새 테이블로 이름 변경
+                command.CommandText = "DROP TABLE WorkShifts";
+                command.ExecuteNonQuery();
+
+                command.CommandText = "ALTER TABLE WorkShifts_new RENAME TO WorkShifts";
+                command.ExecuteNonQuery();
+            }
+            else
+            {
+                // 새 테이블 생성 (Revenue 컬럼 없이)
+                command.CommandText = @"
+                    CREATE TABLE IF NOT EXISTS WorkShifts (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Date TEXT NOT NULL,
+                        StartTime TEXT NOT NULL,
+                        EndTime TEXT NOT NULL,
+                        IsNightShift INTEGER NOT NULL,
+                        Notes TEXT
+                    )";
+                command.ExecuteNonQuery();
+            }
 
             // 기존 DailySettlements 테이블 확인 및 마이그레이션
             command.CommandText = "PRAGMA table_info(DailySettlements)";
@@ -131,8 +170,7 @@ namespace TaxiManager.Services
                     StartTime = TimeOnly.Parse(reader.GetString(2)),
                     EndTime = TimeOnly.Parse(reader.GetString(3)),
                     IsNightShift = reader.GetInt32(4) == 1,
-                    Revenue = reader.GetDecimal(5),
-                    Notes = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
+                    Notes = reader.IsDBNull(5) ? string.Empty : reader.GetString(5)
                 });
             }
 
@@ -149,18 +187,17 @@ namespace TaxiManager.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                INSERT INTO WorkShifts (Date, StartTime, EndTime, IsNightShift, Revenue, Notes)
-                VALUES (@Date, @StartTime, @EndTime, @IsNightShift, @Revenue, @Notes)";
+                INSERT INTO WorkShifts (Date, StartTime, EndTime, IsNightShift, Notes)
+                VALUES (@Date, @StartTime, @EndTime, @IsNightShift, @Notes)";
 
             command.Parameters.AddWithValue("@Date", workShift.Date.ToString("yyyy-MM-dd"));
             command.Parameters.AddWithValue("@StartTime", workShift.StartTime.ToString("HH:mm"));
             command.Parameters.AddWithValue("@EndTime", workShift.EndTime.ToString("HH:mm"));
             command.Parameters.AddWithValue("@IsNightShift", workShift.IsNightShift);
-            command.Parameters.AddWithValue("@Revenue", workShift.Revenue);
             command.Parameters.AddWithValue("@Notes", workShift.Notes ?? string.Empty);
 
             // 디버그: 추가하려는 데이터 출력
-            System.Diagnostics.Debug.WriteLine($"Adding WorkShift: {workShift.Date:yyyy-MM-dd} {workShift.StartTime}-{workShift.EndTime}, Revenue: {workShift.Revenue}");
+            System.Diagnostics.Debug.WriteLine($"Adding WorkShift: {workShift.Date:yyyy-MM-dd} {workShift.StartTime}-{workShift.EndTime}");
 
             var rowsAffected = command.ExecuteNonQuery();
             System.Diagnostics.Debug.WriteLine($"Rows affected: {rowsAffected}");
@@ -178,7 +215,7 @@ namespace TaxiManager.Services
             command.CommandText = @"
                 UPDATE WorkShifts
                 SET Date = @Date, StartTime = @StartTime, EndTime = @EndTime,
-                    IsNightShift = @IsNightShift, Revenue = @Revenue, Notes = @Notes
+                    IsNightShift = @IsNightShift, Notes = @Notes
                 WHERE Id = @Id";
 
             command.Parameters.AddWithValue("@Id", workShift.Id);
@@ -186,7 +223,6 @@ namespace TaxiManager.Services
             command.Parameters.AddWithValue("@StartTime", workShift.StartTime.ToString("HH:mm"));
             command.Parameters.AddWithValue("@EndTime", workShift.EndTime.ToString("HH:mm"));
             command.Parameters.AddWithValue("@IsNightShift", workShift.IsNightShift);
-            command.Parameters.AddWithValue("@Revenue", workShift.Revenue);
             command.Parameters.AddWithValue("@Notes", workShift.Notes ?? string.Empty);
 
             command.ExecuteNonQuery();
@@ -207,23 +243,6 @@ namespace TaxiManager.Services
             command.ExecuteNonQuery();
         }
 
-        /// <summary>
-        /// 특정 날짜의 총 매출을 계산 (마감 여부와 관계없이)
-        /// </summary>
-        public decimal GetDailyRevenue(DateTime date)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            var command = connection.CreateCommand();
-            command.CommandText = @"
-                SELECT SUM(Revenue) FROM WorkShifts
-                WHERE Date = @Date";
-            command.Parameters.AddWithValue("@Date", date.ToString("yyyy-MM-dd"));
-
-            var result = command.ExecuteScalar();
-            return result == DBNull.Value ? 0 : Convert.ToDecimal(result);
-        }
 
         /// <summary>
         /// 특정 월의 총 매출을 계산 (마감된 날짜만)
@@ -316,7 +335,6 @@ namespace TaxiManager.Services
                 throw new InvalidOperationException("해당 날짜에 근무 기록이 없습니다.");
             }
 
-            var totalRevenue = dailyShifts.Sum(x => x.Revenue);
             var totalWorkingHours = dailyShifts.Sum(x => x.WorkingHours);
 
             using var connection = new SqliteConnection(_connectionString);
@@ -328,7 +346,7 @@ namespace TaxiManager.Services
                 VALUES (@Date, @TotalRevenue, @TotalWorkingHours, @Notes)";
 
             command.Parameters.AddWithValue("@Date", date.ToString("yyyy-MM-dd"));
-            command.Parameters.AddWithValue("@TotalRevenue", totalRevenue);
+            command.Parameters.AddWithValue("@TotalRevenue", 0); // 매출은 별도로 입력받음
             command.Parameters.AddWithValue("@TotalWorkingHours", totalWorkingHours);
             command.Parameters.AddWithValue("@Notes", notes ?? string.Empty);
 

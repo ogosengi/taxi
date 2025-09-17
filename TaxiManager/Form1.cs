@@ -50,7 +50,6 @@ public partial class Form1 : Form
             dataGridView1.Columns["StartTime"].HeaderText = "시작시간";
             dataGridView1.Columns["EndTime"].HeaderText = "종료시간";
             dataGridView1.Columns["IsNightShift"].HeaderText = "야간근무";
-            dataGridView1.Columns["Revenue"].HeaderText = "매출";
             dataGridView1.Columns["Notes"].HeaderText = "메모";
             dataGridView1.Columns["ShiftType"].HeaderText = "근무타입";
             dataGridView1.Columns["WorkingHours"].HeaderText = "근무시간";
@@ -78,7 +77,6 @@ public partial class Form1 : Form
                 StartTime = TimeOnly.FromDateTime(dateTimePickerStart.Value),
                 EndTime = TimeOnly.FromDateTime(dateTimePickerEnd.Value),
                 IsNightShift = checkBoxNightShift.Checked,
-                Revenue = 0, // 근무시간 입력 시에는 매출을 0으로 설정
                 Notes = textBoxNotes.Text
             };
 
