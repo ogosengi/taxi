@@ -32,7 +32,9 @@ namespace TaxiManager.Models
         {
             get
             {
-                if (IsNightShift || EndTime < StartTime)
+                // 종료시간이 00:00인 경우 다음날 자정으로 처리
+                // 또는 야간근무 체크가 되어있거나 종료시간이 시작시간보다 작은 경우
+                if (IsNightShift || EndTime < StartTime || (EndTime.Hour == 0 && EndTime.Minute == 0))
                 {
                     // 다음날까지 이어지는 근무인 경우
                     var startDateTime = Date.Date.Add(StartTime.ToTimeSpan());

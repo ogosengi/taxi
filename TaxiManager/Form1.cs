@@ -22,6 +22,9 @@ public partial class Form1 : Form
 
         // 숫자 입력 컨트롤의 텍스트 자동 선택 이벤트 등록
         SetupTextSelectionEvents();
+
+        // 시간 변경 시 야간근무 자동 체크 이벤트 등록
+        SetupTimeChangeEvents();
     }
 
     /// <summary>
@@ -386,6 +389,35 @@ public partial class Form1 : Form
 
         // TextBox 컨트롤의 텍스트 자동 선택 이벤트 등록
         textBoxNotes.Enter += TextBox_Enter;
+    }
+
+    /// <summary>
+    /// 시간 변경 시 야간근무 자동 체크 이벤트 설정
+    /// </summary>
+    private void SetupTimeChangeEvents()
+    {
+        dateTimePickerStart.ValueChanged += TimeChanged;
+        dateTimePickerEnd.ValueChanged += TimeChanged;
+    }
+
+    /// <summary>
+    /// 시간 변경 시 야간근무 자동 체크
+    /// </summary>
+    private void TimeChanged(object? sender, EventArgs e)
+    {
+        var startTime = TimeOnly.FromDateTime(dateTimePickerStart.Value);
+        var endTime = TimeOnly.FromDateTime(dateTimePickerEnd.Value);
+
+        // 종료시간이 00:00이거나 시작시간보다 작으면 야간근무로 자동 체크
+        if (endTime < startTime || (endTime.Hour == 0 && endTime.Minute == 0))
+        {
+            checkBoxNightShift.Checked = true;
+        }
+        else
+        {
+            // 같은 날 내 근무인 경우 야간근무 체크 해제 (사용자가 수동으로 체크할 수 있음)
+            // checkBoxNightShift.Checked = false; // 주석처리: 사용자가 수동으로 체크한 경우를 고려
+        }
     }
 
     /// <summary>
