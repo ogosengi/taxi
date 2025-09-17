@@ -87,7 +87,7 @@ CREATE TABLE DailySettlements (
 - **언어**: C#
 - **프레임워크**: .NET 8.0, Windows Forms
 - **데이터베이스**: SQLite (Microsoft.Data.Sqlite 9.0.9)
-- **엑셀 처리**: EPPlus 8.1.1 (비상업적 라이센스)
+- **엑셀 처리**: NPOI 2.7.4 (오픈소스)
 - **저장소**: GitHub (https://github.com/ogosengi/taxi)
 
 ## 주요 특징
@@ -172,6 +172,9 @@ dotnet run --project TaxiManager
   - 통계대시보드 시트에 수식 기반 자동 계산 추가
   - 차트분석 시트와 월별요약 시트 포함
   - 엑셀에서 직접 편집 및 작업 가능한 구조
+- **오픈소스 라이브러리 적용**:
+  - EPPlus에서 NPOI로 변경하여 완전한 오픈소스 솔루션 구현
+  - 라이센스 제약 없는 자유로운 사용 가능
 
 ### 🔬 효율성 분석 계산식
 시간대별 효율성은 다음과 같이 계산됩니다:

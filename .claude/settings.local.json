@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./TaxiManager.exe)"
+      "Bash(./TaxiManager.exe)",
+      "Bash(dotnet remove:*)",
+      "Bash(dotnet add:*)"
     ],
     "deny": [],
     "ask": []
