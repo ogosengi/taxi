@@ -530,7 +530,7 @@ public partial class Form1 : Form
                 Filter = "Excel Files|*.xlsx",
                 Title = "택시 운행 데이터를 엑셀로 저장",
                 DefaultExt = "xlsx",
-                FileName = $"택시운행데이터_{DateTime.Now:yyyyMMdd}.xlsx"
+                FileName = $"택시운행데이터_{DateTime.Now:yyyyMMddHHmm}.xlsx"
             };
 
             if (saveDialog.ShowDialog() == DialogResult.OK)

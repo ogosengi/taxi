@@ -395,20 +395,29 @@ namespace TaxiManager.Services
             highlightStyle.FillForegroundColor = IndexedColors.Yellow.Index;
             highlightStyle.FillPattern = FillPattern.SolidForeground;
 
-            // 데이터 (효율성 순으로 정렬)
-            var sortedEfficiency = stats.HourlyEfficiency.OrderByDescending(x => x.Value).ToList();
+            // 데이터 (시작시간 순으로 정렬)
+            var sortedEfficiency = stats.HourlyEfficiency.OrderBy(x =>
+            {
+                // "00시" 형식에서 시간 추출
+                var hourStr = x.Key.Replace("시", "");
+                return int.Parse(hourStr);
+            }).ToList();
+
+            // 최고 효율성 시간대 찾기 (매출이 0이 아닌 것 중에서)
+            var maxEfficiency = stats.HourlyEfficiency.Where(x => x.Value > 0).Max(x => x.Value);
             for (int i = 0; i < sortedEfficiency.Count; i++)
             {
                 var row = worksheet.CreateRow(i + 1);
                 var timeCell = row.CreateCell(0);
                 var revenueCell = row.CreateCell(1);
 
-                timeCell.SetCellValue(sortedEfficiency[i].Key);
-                revenueCell.SetCellValue((double)sortedEfficiency[i].Value);
+                var currentItem = sortedEfficiency[i];
+                timeCell.SetCellValue(currentItem.Key);
+                revenueCell.SetCellValue((double)currentItem.Value);
                 revenueCell.CellStyle = numberStyle;
 
-                // 가장 효율적인 시간대 강조
-                if (i == 0)
+                // 가장 효율적인 시간대 강조 (매출이 0이 아닌 것 중에서)
+                if (currentItem.Value > 0 && currentItem.Value == maxEfficiency)
                 {
                     timeCell.CellStyle = highlightStyle;
                     var highlightNumberStyle = workbook.CreateCellStyle();
@@ -571,8 +580,18 @@ namespace TaxiManager.Services
             goldFont.IsBold = true;
             goldStyle.SetFont(goldFont);
 
-            // 데이터 (효율성 순으로 정렬)
-            var sortedEfficiency = stats.HourlyEfficiency.OrderByDescending(x => x.Value).ToList();
+            // 데이터 (시작시간 순으로 정렬)
+            var sortedEfficiency = stats.HourlyEfficiency.OrderBy(x =>
+            {
+                // "00시" 형식에서 시간 추출
+                var hourStr = x.Key.Replace("시", "");
+                return int.Parse(hourStr);
+            }).ToList();
+
+            // 효율성 순위 계산을 위한 정렬된 데이터
+            var efficiencyRank = stats.HourlyEfficiency.OrderByDescending(x => x.Value)
+                .Select((item, index) => new { item.Key, Rank = index + 1 })
+                .ToDictionary(x => x.Key, x => x.Rank);
             for (int i = 0; i < sortedEfficiency.Count; i++)
             {
                 var row = worksheet.CreateRow(i + 1);
@@ -580,13 +599,14 @@ namespace TaxiManager.Services
                 var revenueCell = row.CreateCell(1);
                 var rankCell = row.CreateCell(2);
 
-                timeCell.SetCellValue(sortedEfficiency[i].Key);
-                revenueCell.SetCellValue((double)sortedEfficiency[i].Value);
+                var currentItem = sortedEfficiency[i];
+                timeCell.SetCellValue(currentItem.Key);
+                revenueCell.SetCellValue((double)currentItem.Value);
                 revenueCell.CellStyle = numberStyle;
-                rankCell.SetCellValue(i + 1); // 순위
+                rankCell.SetCellValue(efficiencyRank[currentItem.Key]); // 실제 효율성 순위
 
-                // 1위 강조
-                if (i == 0)
+                // 최고 효율성 시간대 강조 (매출이 0이 아닌 것 중에서)
+                if (currentItem.Value > 0 && efficiencyRank[currentItem.Key] == 1)
                 {
                     timeCell.CellStyle = goldStyle;
                     var goldNumberStyle = workbook.CreateCellStyle();
