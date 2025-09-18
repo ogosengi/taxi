@@ -353,9 +353,9 @@ namespace TaxiManager.Services
         }
 
         /// <summary>
-        /// 시간대별 효율성 계산 (시작 시간 기준)
+        /// 시간대별 효율성 계산 (실제 근무시각 기준)
         /// 계산식: 각 시간대별로 (총 매출 / 총 근무시간) 계산
-        /// 모든 시간대(0-23시)를 분석하고 시작시간으로 정렬
+        /// 근무시간을 시간대별로 분할하여 실제 근무한 시각에 따라 분석
         /// </summary>
         private Dictionary<string, decimal> CalculateHourlyEfficiency(DateTime startDate, DateTime endDate)
         {
@@ -373,7 +373,7 @@ namespace TaxiManager.Services
                 .Where(ws => ws.Date >= startDate.Date && ws.Date <= endDate.Date)
                 .ToList();
 
-            // 각 근무시간에 대해 해당 날짜의 마감 매출을 비례 배분
+            // 각 근무시간에 대해 실제 근무한 시간대별로 매출 배분
             foreach (var workShift in allWorkShifts)
             {
                 var settlement = settlements.FirstOrDefault(s => s.Date.Date == workShift.Date.Date);
@@ -389,13 +389,19 @@ namespace TaxiManager.Services
                 var revenueRatio = workShift.WorkingHours / dailyTotalHours;
                 var allocatedRevenue = settlement.TotalRevenue * (decimal)revenueRatio;
 
-                // 시작 시간대별로 집계
-                var startTimeKey = $"{workShift.StartTime:HH}시";
+                // 근무시간을 시간대별로 분할하여 매출 배분
+                var workingHourSegments = GetWorkingHourSegments(workShift);
 
-                hourlyData[startTimeKey] = (
-                    hourlyData[startTimeKey].totalRevenue + allocatedRevenue,
-                    hourlyData[startTimeKey].totalHours + workShift.WorkingHours
-                );
+                foreach (var segment in workingHourSegments)
+                {
+                    var hourKey = $"{segment.Hour:D2}시";
+                    var segmentRevenue = allocatedRevenue * (decimal)(segment.Hours / workShift.WorkingHours);
+
+                    hourlyData[hourKey] = (
+                        hourlyData[hourKey].totalRevenue + segmentRevenue,
+                        hourlyData[hourKey].totalHours + segment.Hours
+                    );
+                }
             }
 
             // 시간당 평균 매출 계산 - 모든 시간대 포함 (데이터가 없는 시간대는 0으로 표시)
@@ -418,6 +424,52 @@ namespace TaxiManager.Services
             }
 
             return efficiency;
+        }
+
+        /// <summary>
+        /// 근무시간을 시간대별로 분할
+        /// </summary>
+        private List<(int Hour, double Hours)> GetWorkingHourSegments(TaxiWorkShift workShift)
+        {
+            var segments = new List<(int Hour, double Hours)>();
+
+            // 시작시간과 종료시간을 DateTime으로 변환하여 정확한 계산
+            var baseDate = workShift.Date;
+            var startDateTime = baseDate.Add(workShift.StartTime.ToTimeSpan());
+            var endDateTime = baseDate.Add(workShift.EndTime.ToTimeSpan());
+
+            // 야간근무인 경우 종료시간을 다음날로 설정
+            if (workShift.IsNightShift || workShift.EndTime < workShift.StartTime)
+            {
+                endDateTime = endDateTime.AddDays(1);
+            }
+
+            // 현재 시간을 시작시간으로 설정
+            var currentTime = startDateTime;
+
+            while (currentTime < endDateTime)
+            {
+                var currentHour = currentTime.Hour;
+
+                // 현재 시간대의 끝 (다음 정시)
+                var nextHourStart = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentHour, 0, 0).AddHours(1);
+
+                // 세그먼트의 끝시간 계산 (다음 정시 또는 근무 종료시간 중 빠른 것)
+                var segmentEnd = endDateTime < nextHourStart ? endDateTime : nextHourStart;
+
+                // 이 시간대에서 근무한 시간 계산
+                var segmentHours = (segmentEnd - currentTime).TotalHours;
+
+                if (segmentHours > 0)
+                {
+                    segments.Add((currentHour, segmentHours));
+                }
+
+                // 다음 정시로 이동
+                currentTime = nextHourStart;
+            }
+
+            return segments;
         }
 
         /// <summary>
