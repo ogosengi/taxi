@@ -3,7 +3,12 @@
     "allow": [
       "Bash(./TaxiManager.exe)",
       "Bash(dotnet remove:*)",
-      "Bash(dotnet add:*)"
+      "Bash(dotnet add:*)",
+      "Bash(dotnet build)",
+      "Bash(sqlite3:*)",
+      "Bash(./TaxiManager.exe --version)",
+      "Bash(git fetch:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
