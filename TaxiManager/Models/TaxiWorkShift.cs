@@ -21,6 +21,11 @@ namespace TaxiManager.Models
         {
             get
             {
+                // 야간근무이거나 종료시간이 00:00인 경우 다음날 표시
+                if (IsNightShift || (EndTime.Hour == 0 && EndTime.Minute == 0))
+                {
+                    return $"근무시간 ({StartTime:HH:mm}-{EndTime:HH:mm}+1)";
+                }
                 return $"근무시간 ({StartTime:HH:mm}-{EndTime:HH:mm})";
             }
         }

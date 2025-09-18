@@ -27,6 +27,10 @@ public partial class Form1 : Form
 
         // 시간 변경 시 야간근무 자동 체크 이벤트 등록
         SetupTimeChangeEvents();
+
+        // F1 키 처리를 위한 KeyPreview 설정
+        this.KeyPreview = true;
+        this.KeyDown += Form1_KeyDown;
     }
 
     /// <summary>
@@ -468,6 +472,20 @@ public partial class Form1 : Form
         if (sender is TextBox textBox)
         {
             textBox.SelectAll();
+        }
+    }
+
+    /// <summary>
+    /// F1 키 처리 - 근무시간 입력 일자로 이동
+    /// </summary>
+    private void Form1_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.KeyCode == Keys.F1)
+        {
+            // F1 키를 누르면 근무시간 입력의 월 입력 칸으로 포커스 이동
+            numericUpDownMonth.Focus();
+            numericUpDownMonth.Select(0, numericUpDownMonth.Text.Length);
+            e.Handled = true; // 기본 F1 처리 방지
         }
     }
 

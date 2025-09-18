@@ -121,7 +121,7 @@ partial class Form1
         numericUpDownRevenue.Maximum = new decimal(new int[] { 999999, 0, 0, 0 });
         numericUpDownRevenue.Name = "numericUpDownRevenue";
         numericUpDownRevenue.Size = new Size(119, 23);
-        numericUpDownRevenue.TabIndex = 11;
+        numericUpDownRevenue.TabIndex = 8;
         //
         // labelRevenue
         //
@@ -240,7 +240,7 @@ partial class Form1
         btnAddShift.Location = new Point(225, 155);
         btnAddShift.Name = "btnAddShift";
         btnAddShift.Size = new Size(84, 23);
-        btnAddShift.TabIndex = 8;
+        btnAddShift.TabIndex = 10;
         btnAddShift.Text = "추가";
         btnAddShift.UseVisualStyleBackColor = true;
         btnAddShift.Click += btnAddShift_Click;
