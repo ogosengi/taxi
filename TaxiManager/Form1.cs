@@ -164,68 +164,60 @@ public partial class Form1 : Form
     }
 
     /// <summary>
-    /// 기간별 운행 현황 조회
+    /// 기간별 운행 현황 조회 - 통계 파일로 내보내기
     /// </summary>
     private void btnPeriodStats_Click(object sender, EventArgs e)
     {
-        var startDate = dateTimePickerPeriodStart.Value;
-        var endDate = dateTimePickerPeriodEnd.Value;
-
-        var stats = _dataService.GetOperationStats(startDate, endDate);
-
-        var statsMessage = $"기간: {startDate:yyyy-MM-dd} ~ {endDate:yyyy-MM-dd}\n" +
-                          $"총 근무 일수: {stats.TotalWorkDays}일\n" +
-                          $"총 매출: {stats.TotalRevenue:C}\n" +
-                          $"총 근무시간: {stats.TotalWorkingHours:F1}시간\n" +
-                          $"시간당 평균 매출: {stats.AverageRevenuePerHour:C}\n\n" +
-                          $"🎯 최고 효율성 분석:\n" +
-                          $"• 가장 효율적인 1시간: {stats.MostEfficientStartTime} ({stats.MostEfficientHourlyRevenue:C}/시간)\n" +
-                          $"• 가장 효율적인 시간대: {stats.BestRevenueTimeBlock}\n" +
-                          $"• 가장 효율적인 근무길이: {stats.BestWorkDuration}";
-
-        // 야간/주간 근무 비교
-        if (stats.DayNightComparison.Count > 0)
+        try
         {
-            statsMessage += "\n\n🌙 주간/야간 근무 비교:";
-            foreach (var item in stats.DayNightComparison.OrderByDescending(x => x.Value))
+            var startDate = dateTimePickerPeriodStart.Value;
+            var endDate = dateTimePickerPeriodEnd.Value;
+
+            var stats = _dataService.GetOperationStats(startDate, endDate);
+
+            // 저장 파일 대화상자
+            using var saveDialog = new SaveFileDialog
             {
-                statsMessage += $"\n• {item.Key}: {item.Value:C}/시간";
+                Filter = "Text Files|*.txt",
+                Title = "운행 통계 리포트를 텍스트 파일로 저장",
+                DefaultExt = "txt",
+                FileName = $"택시운행통계_{startDate:yyyyMMdd}_{endDate:yyyyMMdd}_{DateTime.Now:HHmm}.txt"
+            };
+
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                // 통계 내보내기 서비스 사용
+                var statsExportService = new Services.StatsExportService();
+                statsExportService.ExportStatsToTextFile(stats, startDate, endDate, saveDialog.FileName);
+
+                MessageBox.Show($"통계 리포트가 성공적으로 저장되었습니다.\n저장 위치: {saveDialog.FileName}",
+                    "통계 리포트 저장 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 저장된 파일을 열어볼지 묻기
+                if (MessageBox.Show("저장된 통계 파일을 지금 열어보시겠습니까?", "파일 열기",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    try
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = saveDialog.FileName,
+                            UseShellExecute = true
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"파일을 여는 중 오류가 발생했습니다: {ex.Message}", "오류",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
             }
         }
-
-        // 근무시간 길이별 효율성
-        if (stats.WorkDurationEfficiency.Count > 0)
+        catch (Exception ex)
         {
-            statsMessage += "\n\n⏰ 근무시간 길이별 효율성:";
-            foreach (var item in stats.WorkDurationEfficiency.OrderByDescending(x => x.Value))
-            {
-                statsMessage += $"\n• {item.Key}: {item.Value:C}/시간";
-            }
+            MessageBox.Show($"통계 리포트 생성 중 오류가 발생했습니다: {ex.Message}", "오류",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-
-        // 요일별 효율성 (상위 3개만 표시)
-        if (stats.DayOfWeekEfficiency.Count > 0)
-        {
-            statsMessage += "\n\n📅 요일별 효율성 (상위 3개):";
-            var topDays = stats.DayOfWeekEfficiency.OrderByDescending(x => x.Value).Take(3);
-            foreach (var item in topDays)
-            {
-                statsMessage += $"\n• {item.Key}: {item.Value:C}/시간";
-            }
-        }
-
-        // 2시간 블록별 효율성 (상위 3개만 표시)
-        if (stats.TwoHourBlockEfficiency.Count > 0)
-        {
-            statsMessage += "\n\n🕐 2시간 블록별 효율성 (상위 3개):";
-            var topBlocks = stats.TwoHourBlockEfficiency.OrderByDescending(x => x.Value).Take(3);
-            foreach (var item in topBlocks)
-            {
-                statsMessage += $"\n• {item.Key}: {item.Value:C}/시간";
-            }
-        }
-
-        MessageBox.Show(statsMessage, "운행 현황 및 효율성 분석", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     /// <summary>
