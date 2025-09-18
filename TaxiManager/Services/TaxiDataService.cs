@@ -355,10 +355,17 @@ namespace TaxiManager.Services
         /// <summary>
         /// 시간대별 효율성 계산 (시작 시간 기준)
         /// 계산식: 각 시간대별로 (총 매출 / 총 근무시간) 계산
+        /// 모든 시간대(0-23시)를 분석하고 시작시간으로 정렬
         /// </summary>
         private Dictionary<string, decimal> CalculateHourlyEfficiency(DateTime startDate, DateTime endDate)
         {
+            // 모든 시간대(0-23시)를 초기화
             var hourlyData = new Dictionary<string, (decimal totalRevenue, double totalHours)>();
+            for (int hour = 0; hour < 24; hour++)
+            {
+                var timeKey = $"{hour:D2}시";
+                hourlyData[timeKey] = (0, 0);
+            }
 
             // 해당 기간의 모든 마감자료와 근무시간 가져오기
             var settlements = GetDailySettlements(startDate, endDate);
@@ -385,28 +392,32 @@ namespace TaxiManager.Services
                 // 시작 시간대별로 집계
                 var startTimeKey = $"{workShift.StartTime:HH}시";
 
-                if (!hourlyData.ContainsKey(startTimeKey))
-                {
-                    hourlyData[startTimeKey] = (0, 0);
-                }
-
                 hourlyData[startTimeKey] = (
                     hourlyData[startTimeKey].totalRevenue + allocatedRevenue,
                     hourlyData[startTimeKey].totalHours + workShift.WorkingHours
                 );
             }
 
-            // 시간당 평균 매출 계산
+            // 시간당 평균 매출 계산 - 모든 시간대 포함 (데이터가 없는 시간대는 0으로 표시)
             var efficiency = new Dictionary<string, decimal>();
-            foreach (var item in hourlyData)
+
+            // 시간 순서대로 정렬하여 추가
+            for (int hour = 0; hour < 24; hour++)
             {
-                if (item.Value.totalHours > 0)
+                var timeKey = $"{hour:D2}시";
+                var data = hourlyData[timeKey];
+
+                if (data.totalHours > 0)
                 {
-                    efficiency[item.Key] = item.Value.totalRevenue / (decimal)item.Value.totalHours;
+                    efficiency[timeKey] = data.totalRevenue / (decimal)data.totalHours;
+                }
+                else
+                {
+                    efficiency[timeKey] = 0; // 데이터가 없는 시간대는 0으로 표시
                 }
             }
 
-            return efficiency.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+            return efficiency;
         }
 
         /// <summary>
